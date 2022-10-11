@@ -24,9 +24,6 @@ public class Grid {
 
         for (int i = 0; i < m; i += 1) {
             for (int j = 0; j < n; j += 1) {
-                System.out.println("x: " + j / (float) (n - 1));
-                System.out.println("y: " + i / (float) (m - 1));
-                System.out.println("-");
                 // TODO: Naplnit vertices
                 vertices[idx1++] = (j / (float) (n - 1));
                 vertices[idx1++] = (i / (float) (m - 1));   // TAK????
@@ -44,24 +41,13 @@ public class Grid {
         {
             for (int j = 0; j < n - 1; j++)
             {
-                /*System.out.println(j);
-                System.out.println(j + n);
-                System.out.println(j + 1);
-
-                System.out.println("-");
-                System.out.println(j + 1);
-                System.out.println(j + n);
-                System.out.println(j + n + 1);
-
-                System.out.println("-----");
-*/
                 indices[idx2++] = j;
-                indices[idx2++] = j+n;
-                indices[idx2++] = j+1;
+                indices[idx2++] = j + n;
+                indices[idx2++] = j + 1;
 
-                indices[idx2++] = j+1;
-                indices[idx2++] = j+n;
-                indices[idx2++] = j+n+1;
+                indices[idx2++] = j + 1;
+                indices[idx2++] = j + n;
+                indices[idx2++] = j + n + 1;
             }
         }
 
@@ -74,6 +60,8 @@ public class Grid {
     public static void GridTriangleStrip(int m, int n){
 
         float[] vertexBuffer = new float[m * n * 2];
+
+
 
         int idx1 = 0;
 
