@@ -1,13 +1,15 @@
 #version 330
 in vec2 inPosition;
-in vec3 inColor;
 
-out vec4 o_color;
+uniform mat4 u_View;
+uniform mat4 u_Proj;
 
 void main() {
-    vec2 newPosition = inPosition;
-    newPosition.x += 0.5f;
+    //vstup <0,1>
+    //vytup <-1,1>
+    vec2 pos = inPosition * 2 - 1;
 
-    gl_Position = vec4(newPosition, 0.f, 1.f);
-    o_color = vec4(inColor, 1.0f);
+    vec4 posMVP = u_View * u_Proj * vec4(pos, 0.f, 1.f);
+
+    gl_Position = posMVP;
 }

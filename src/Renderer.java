@@ -1,57 +1,50 @@
+import lwjglutils.OGLBuffers;
 import lwjglutils.ShaderUtils;
+import transforms.Camera;
+import transforms.Mat4;
+import transforms.Mat4PerspRH;
+import transforms.Vec3D;
 
 import static org.lwjgl.opengl.GL33.*;
 
 public class Renderer {
 
-    private final int[] indices;
+    private int[] indices;
+    private OGLBuffers buffers;
+    private int shaderProgram;
+
+    private Grid grid;
+
+    private Camera camera;
+    private Mat4 projection;
 
     public Renderer() {
-        int shaderProgram = ShaderUtils.loadProgram("/shaders/Basic");
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+        camera = new Camera()
+                .withPosition(new Vec3D(0.5f,-2f,1.5f))
+                .withAzimuth(Math.toRadians(90))
+                .withZenith(Math.toRadians(-45));
+
+        projection = new Mat4PerspRH(Math.PI/3,600/(float)800, 0.1f,50.f);
+
+        shaderProgram = ShaderUtils.loadProgram("/shaders/Basic");
         glUseProgram(shaderProgram);
-
-        // 3 x vertex: positions (2 x float)
-        float[] vertices = {
-                -1.f, -1.f,   1.0f, 0.0f, 0.0f, // 1
-                 1.f,  0.f,   0.0f, 1.0f, 0.0f, // 2
-                 0.f,  1.f,   0.0f, 0.0f, 1.0f // 3
-        };
-
-        // 1 x GL_TRIANGLES
-        this.indices = new int[] {
-                0, 1, 2
-        };
-
-        // OpenGL: VertexBuffer
-        int vb = glGenBuffers();
-        glBindBuffer(GL_ARRAY_BUFFER, vb);
-        glBufferData(GL_ARRAY_BUFFER, vertices, GL_STATIC_DRAW);
-
-        // OpenGL: IndexBuffer
-        int ib = glGenBuffers();
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW);
-
-        // Positions
-        int loc_inPosition = glGetAttribLocation(shaderProgram, "inPosition");
-        glVertexAttribPointer(loc_inPosition, 2, GL_FLOAT, false, 5 * Float.BYTES, 0);
-        glEnableVertexAttribArray(loc_inPosition);
-        // Color
-        int loc_inColor = glGetAttribLocation(shaderProgram, "inColor");
-        glVertexAttribPointer(loc_inColor, 3, GL_FLOAT, false,5 * Float.BYTES,2 * Float.BYTES);
-        glEnableVertexAttribArray(loc_inColor);
 
         int loc_uColorR = glGetUniformLocation(shaderProgram, "u_ColorR");
         glUniform1f(loc_uColorR, 1.f);
 
-        Grid grid = new Grid(4, 4);
+        int loc_uView = glGetUniformLocation(shaderProgram, "u_View");
+        glUniformMatrix2x4fv(loc_uView, false, projection.floatArray());
 
+        int loc_uProj = glGetUniformLocation(shaderProgram, "u_Proj");
+        glUniformMatrix2x4fv(loc_uProj, false, camera.getViewMatrix().floatArray());
 
-        //GridTriangleStrip gridTriangleStrip = new Grid(4,4);
+        grid = new Grid(20, 20);
+
     }
 
     public void draw() {
-        glDrawElements(GL_TRIANGLES, indices.length, GL_UNSIGNED_INT, 0);
+        grid.getBuffers().draw(GL_TRIANGLES, shaderProgram);
     }
 }
-
