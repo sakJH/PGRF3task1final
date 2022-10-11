@@ -9,7 +9,10 @@ void main() {
     //vytup <-1,1>
     vec2 pos = inPosition * 2 - 1;
 
-    vec4 posMVP = u_View * u_Proj * vec4(pos, 0.f, 1.f);
+    //z
+    float z = (1/2) * cos(sqrt(20 * pow(pos.x,2) + 20 * pow(pos.y,2))) ;
+
+    vec4 posMVP = u_View * u_Proj * vec4(pos, z, 1.f);
 
     gl_Position = posMVP;
 }

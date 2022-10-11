@@ -9,8 +9,6 @@ import static org.lwjgl.opengl.GL33.*;
 
 public class Renderer {
 
-    private int[] indices;
-    private OGLBuffers buffers;
     private int shaderProgram;
 
     private Grid grid;
