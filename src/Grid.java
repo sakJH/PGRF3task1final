@@ -13,8 +13,7 @@ public class Grid {
      */
 
 
-
-    public static OGLBuffers  gridListTriangle(int m, int n)
+    public static OGLBuffers gridListTriangle(int m, int n)
     {
         float[] vertices = new float[2 * m * n];
         int[] indices = new int[3 * 2 * (m - 1) * (n - 1)];
