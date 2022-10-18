@@ -1,4 +1,9 @@
 import lwjglutils.*;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.glfw.GLFWCursorPosCallback;
+import org.lwjgl.glfw.GLFWKeyCallback;
+import org.lwjgl.glfw.GLFWMouseButtonCallback;
+import org.lwjgl.glfw.GLFWScrollCallback;
 import transforms.Camera;
 import transforms.Mat4;
 import transforms.Mat4PerspRH;
@@ -6,13 +11,13 @@ import transforms.Vec3D;
 
 import java.awt.event.*;
 import java.io.IOException;
+import java.nio.DoubleBuffer;
 
+import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL33.*;
 
-public class Renderer implements MouseListener, MouseMotionListener, KeyListener {
+public class Renderer extends AbstractRenderer{
     private int shaderProgram;
-    private Grid grid;
-    private Main main;
 
     private Camera camera;
     private Mat4 projection;
@@ -32,14 +37,24 @@ public class Renderer implements MouseListener, MouseMotionListener, KeyListener
     double camSpeed = 0.50;
     float time = 0;
 
+    private boolean mouseButton1 = false;
+    private double ox, oy;
 
-    public Renderer () {
+
+
+
+    @Override
+    public void init() {
         //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+        glEnable(GL_DEPTH_TEST);
+
         camera = new Camera()
-                .withPosition(new Vec3D(0.5f, -2f, 1.5f))
-                .withAzimuth(Math.toRadians(90))
-                .withZenith(Math.toRadians(-45));
+                .withPosition(new Vec3D(0.f, 0f, 0f))
+                .withAzimuth(Math.PI * 1.25)
+                .withZenith(Math.PI * - 0.125)
+                .withFirstPerson(false)
+                .withRadius(3);
 
         projection = new Mat4PerspRH(Math.PI / 3, 600 / (float)800, 0.1f, 50.f);
 
@@ -55,7 +70,6 @@ public class Renderer implements MouseListener, MouseMotionListener, KeyListener
         // Proj
         int loc_uProj = glGetUniformLocation(shaderProgram, "u_Proj");
         glUniformMatrix4fv(loc_uProj, false, projection.floatArray());
-
 
 
         // Mapování textur
@@ -84,12 +98,16 @@ public class Renderer implements MouseListener, MouseMotionListener, KeyListener
         //
         buffers = Grid.gridListTriangle(10, 10);  //Funkční
         //buffers = Grid.gridStripsTriangle(10, 10);  //Funkční
-        
-        txtRenderer = new OGLTextRenderer(width, height);
+
+        //txtRenderer = new OGLTextRenderer(width, height);
+        txtRenderer = new OGLTextRenderer(800, 600);
+
         txtRenderer.addStr2D(10, 10, "Sakač");
     }
 
-    public void draw() {
+
+    @Override
+    public void display() {
         texture.bind();
         //grid.getBuffers().draw(GL_TRIANGLES, shaderProgram);
         //
@@ -97,90 +115,127 @@ public class Renderer implements MouseListener, MouseMotionListener, KeyListener
         //buffers.draw(GL_TRIANGLE_STRIP,shaderProgram);  //Funkční
     }
 
-    @Override
-    public void keyTyped(KeyEvent e) {
+    private GLFWMouseButtonCallback mbCallback = new GLFWMouseButtonCallback () {
+        @Override
+        public void invoke(long window, int button, int action, int mods) {
+            mouseButton1 = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS;
 
-    }
+            if (button==GLFW_MOUSE_BUTTON_1 && action == GLFW_PRESS){
+                mouseButton1 = true;
+                DoubleBuffer xBuffer = BufferUtils.createDoubleBuffer(1);
+                DoubleBuffer yBuffer = BufferUtils.createDoubleBuffer(1);
+                glfwGetCursorPos(window, xBuffer, yBuffer);
+                ox = xBuffer.get(0);
+                oy = yBuffer.get(0);
+            }
 
-    @Override
-    public void keyPressed(KeyEvent e) {
-
-        switch (e.getKeyCode()) {
-            // WSAD
-            /*case GLFW_KEY_W:
-                camera = camera.forward(camSpeed);
-                System.out.println("W");*/
-            case KeyEvent.VK_W -> {
-                camera = camera.forward(camSpeed);
-                System.out.println("W");
+            if (button==GLFW_MOUSE_BUTTON_1 && action == GLFW_RELEASE){
+                mouseButton1 = false;
+                DoubleBuffer xBuffer = BufferUtils.createDoubleBuffer(1);
+                DoubleBuffer yBuffer = BufferUtils.createDoubleBuffer(1);
+                glfwGetCursorPos(window, xBuffer, yBuffer);
+                double x = xBuffer.get(0);
+                double y = yBuffer.get(0);
+                camera = camera.addAzimuth((double) Math.PI * (ox - x) / width)
+                        .addZenith((double) Math.PI * (oy - y) / width);
+                ox = x;
+                oy = y;
             }
-            case KeyEvent.VK_S -> {
-                camera = camera.backward(camSpeed);
-                System.out.println("S");
-            }
-            case KeyEvent.VK_A -> {
-                camera = camera.left(camSpeed);
-                System.out.println("A");
-            }
-            case KeyEvent.VK_D -> {
-                camera = camera.right(camSpeed);
-                System.out.println("D");
-            }
-            //Up, Down
-            case KeyEvent.VK_SHIFT -> camera = camera.up(1);
-            case KeyEvent.VK_CONTROL -> camera = camera.down(1);
-
-            // Perspektivní a ortogonální projekce
-            case KeyEvent.VK_P -> camera = camera.withFirstPerson(!camera.getFirstPerson());
         }
-    }
+    };
+
+    private GLFWCursorPosCallback cpCallbacknew = new GLFWCursorPosCallback() {
+        @Override
+        public void invoke(long window, double x, double y) {
+            if (mouseButton1) {
+                camera = camera.addAzimuth((double) Math.PI * (ox - x) / width)
+                        .addZenith((double) Math.PI * (oy - y) / width);
+                ox = x;
+                oy = y;
+            }
+        }
+    };
+
+    protected GLFWScrollCallback scrollCallback = new GLFWScrollCallback() {
+        @Override public void invoke (long window, double dx, double dy) {
+            if (dy < 0)
+            {
+                //TODO
+
+            }
+
+        }
+    };
 
     @Override
-    public void keyReleased(KeyEvent e) {
-
+    public GLFWScrollCallback getScrollCallback() {
+        return scrollCallback;
     }
 
-    @Override
-    public void mouseClicked(MouseEvent e) {
 
+    protected GLFWKeyCallback keyCallback = new GLFWKeyCallback() {
+        @Override
+        public void invoke(long window, int key, int scancode, int action, int mods) {
+            if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) glfwSetWindowShouldClose(window, true); // We will detect this in the rendering loop
+
+            if (action == GLFW_PRESS || action == GLFW_REPEAT){
+                switch (key){
+                    case GLFW_KEY_W -> {
+                        camera = camera.forward(camSpeed);
+                        System.out.println("S");
+                    }
+                    case GLFW_KEY_S -> {
+                        camera = camera.backward(camSpeed);
+                        System.out.println("S");
+                    }
+                    case GLFW_KEY_A -> {
+                        camera = camera.left(camSpeed);
+                        System.out.println("A");
+                    }
+                    case GLFW_KEY_D -> {
+                        camera = camera.right(camSpeed);
+                        System.out.println("D");
+                    }
+                    //Up, Down
+                    case GLFW_KEY_LEFT_SHIFT -> {
+                        camera = camera.up(1);
+                        System.out.println("D");
+                    }
+                    case GLFW_KEY_LEFT_CONTROL -> {
+                        camera = camera.down(1);
+                        System.out.println("D");
+                    }
+                    // Perspektivní a ortogonální projekce
+                    case GLFW_KEY_P -> camera = camera.withFirstPerson(!camera.getFirstPerson());
+
+                }
+            }
+
+
+        }
+    };
+
+
+
+    public GLFWKeyCallback getKeyCallback() {
+        return keyCallback;
     }
 
-    @Override
-    public void mousePressed(MouseEvent e) {
-        axisX = e.getX();
-        axisY = e.getY();
-        System.out.println("X " + axisX + "  Y " + axisY);
+
+    public GLFWCursorPosCallback getCpCallbacknew() {
+        return cpCallbacknew;
     }
 
-    @Override
-    public void mouseReleased(MouseEvent e) {
-
+    public void setCpCallbacknew(GLFWCursorPosCallback cpCallbacknew) {
+        this.cpCallbacknew = cpCallbacknew;
     }
 
-    @Override
-    public void mouseEntered(MouseEvent e) {
-
+    public GLFWMouseButtonCallback getMbCallback() {
+        return mbCallback;
     }
 
-    @Override
-    public void mouseExited(MouseEvent e) {
-
-    }
-
-    @Override
-    public void mouseDragged(MouseEvent e) {
-        camera = camera
-                .addAzimuth(
-                (double) Math.PI * (axisX - e.getX()) / width)
-                .addZenith((double) Math.PI * (e.getY() - axisY) / width);
-
-        axisX = e.getX();
-        axisY = e.getY();
-    }
-
-    @Override
-    public void mouseMoved(MouseEvent e) {
-
+    public void setMbCallback(GLFWMouseButtonCallback mbCallback) {
+        this.mbCallback = mbCallback;
     }
 }
 
