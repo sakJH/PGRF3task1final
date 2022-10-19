@@ -50,7 +50,7 @@ public abstract class AbstractRenderer {
 		textRenderer.addStr2D(width-90, height-3, " (c) PGRF UHK");
 		textRenderer.draw();
 	}
-	
+
 	protected GLFWKeyCallback keyCallback = new GLFWKeyCallback() {
 		@Override
 		public void invoke(long window, int key, int scancode, int action, int mods) {
