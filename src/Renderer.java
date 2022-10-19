@@ -6,20 +6,18 @@ import org.lwjgl.glfw.GLFWCursorPosCallback;
 import org.lwjgl.glfw.GLFWKeyCallback;
 import org.lwjgl.glfw.GLFWMouseButtonCallback;
 import org.lwjgl.glfw.GLFWScrollCallback;
-import transforms.Camera;
-import transforms.Mat4;
-import transforms.Mat4PerspRH;
-import transforms.Vec3D;
+import transforms.*;
 
 import java.io.IOException;
 import java.nio.DoubleBuffer;
 
 import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.opengl.GL20.glGetUniformLocation;
 import static org.lwjgl.opengl.GL33.*;
 
 public class Renderer extends AbstractRenderer {
     private int shaderProgram;
-    private Grid grid;
+    //private Grid grid;
 
     private Camera camera;
     private Mat4 projection;
@@ -29,11 +27,20 @@ public class Renderer extends AbstractRenderer {
 
     double camSpeed = 0.25;
     float time = 0;
+    private Main main;
+
+    int loc_uColorR, loc_uProj, loc_uView, loc_uSelectedModel, loc_lightMode;
+
+    OGLBuffers buffers;
+    int lightModeValue = 0;
 
     @Override
     public void init() {
         //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glEnable(GL_DEPTH_TEST);
+
+        buffers = Grid.gridListTriangle(20, 20);
+
 
         camera = new Camera()
                 .withPosition(new Vec3D(0.f, 0f, 0f))
@@ -41,19 +48,26 @@ public class Renderer extends AbstractRenderer {
                 .withZenith(Math.PI * -0.125)
                 .withFirstPerson(false)
                 .withRadius(3);
-        projection = new Mat4PerspRH(Math.PI / 3, 600 / (float) 800, 0.1f, 50.f);
+        projection = new Mat4PerspRH(Math.PI / 3, Main.getHeight() / (float) Main.getWidth(), 0.1f, 50.f);
+
 
         shaderProgram = ShaderUtils.loadProgram("/shaders/Basic");
         glUseProgram(shaderProgram);
 
         // Color
-        int loc_uColorR = glGetUniformLocation(shaderProgram, "u_ColorR");
+        loc_uColorR = glGetUniformLocation(shaderProgram, "u_ColorR");
         glUniform1f(loc_uColorR, 1.f);
         // Proj
-        int loc_uProj = glGetUniformLocation(shaderProgram, "u_Proj");
+        loc_uProj = glGetUniformLocation(shaderProgram, "u_Proj");
         glUniformMatrix4fv(loc_uProj, false, projection.floatArray());
 
-        grid = new Grid(20, 20);
+        loc_lightMode = glGetUniformLocation(shaderProgram, "lightMode");
+
+        //int loc_uSelectedModel = glGetUniformLocation(shaderProgram, "selectedModel");
+
+
+
+        //grid = new Grid(20, 20);
 
         try {
             texture = new OGLTexture2D("./textures/bricks.jpg");
@@ -65,19 +79,30 @@ public class Renderer extends AbstractRenderer {
     @Override
     public void display() {
         // View
-        int loc_uView = glGetUniformLocation(shaderProgram, "u_View");
+        loc_uView = glGetUniformLocation(shaderProgram, "u_View");
         glUniformMatrix4fv(loc_uView, false, camera.getViewMatrix().floatArray());
 
         texture.bind();
-        grid.getBuffers().draw(GL_TRIANGLES, shaderProgram);
+        //grid.getBuffers().draw(GL_TRIANGLES, shaderProgram);
+
+        loc_uSelectedModel = glGetUniformLocation(shaderProgram, "selectedModel");
+
+        //TODO - Vybrání modelů (6x)
+        glUniform1i(loc_uSelectedModel, 1);
+        glUniformMatrix4fv(loc_uProj, false, projection.floatArray());
+        buffers.draw(GL_TRIANGLES, shaderProgram);
+
+        //TODO - Vybrání složek osvětlení
+        glUniform1i(loc_lightMode, 1);
+
     }
 
     private GLFWCursorPosCallback cpCallbacknew = new GLFWCursorPosCallback() {
         @Override
         public void invoke(long window, double x, double y) {
             if (mouseButton1) {
-                camera = camera.addAzimuth((double) Math.PI * (ox - x) / 800)
-                        .addZenith((double) Math.PI * (oy - y) / 800);
+                camera = camera.addAzimuth((double) Math.PI * (ox - x) / Main.getWidth())
+                        .addZenith((double) Math.PI * (oy - y) / Main.getWidth());
                 ox = x;
                 oy = y;
             }
@@ -105,8 +130,8 @@ public class Renderer extends AbstractRenderer {
                 glfwGetCursorPos(window, xBuffer, yBuffer);
                 double x = xBuffer.get(0);
                 double y = yBuffer.get(0);
-                camera = camera.addAzimuth((double) Math.PI * (ox - x) / 800)
-                        .addZenith((double) Math.PI * (oy - y) / 800);
+                camera = camera.addAzimuth((double) Math.PI * (ox - x) / Main.getWidth())
+                        .addZenith((double) Math.PI * (oy - y) / Main.getWidth());
                 ox = x;
                 oy = y;
             }
@@ -157,7 +182,29 @@ public class Renderer extends AbstractRenderer {
                         System.out.println("L-CTRL");
                     }
                     // Perspektivní a ortogonální projekce
-                    case GLFW_KEY_P -> camera = camera.withFirstPerson(!camera.getFirstPerson());
+                    //case GLFW_KEY_P -> camera = camera.withFirstPerson(!camera.getFirstPerson());
+                    case GLFW_KEY_Q -> {
+                        projection = new Mat4PerspRH(
+                                Math.PI / 3,
+                                height / (float) width,
+                                0.1,
+                                20
+                        );
+                        System.out.println("Q");
+                    }
+                    case GLFW_KEY_E-> {
+                        projection = new Mat4OrthoRH(2.5, 2.5, 0.1, 20);
+                        System.out.println("Q");
+                    }
+
+                    //Objekty
+
+                    //Osvětlovací model
+                    case GLFW_KEY_L -> {
+                        if (lightModeValue == 3 ) {lightModeValue = 0;}
+                        else {
+                            lightModeValue++; }
+                    }
                 }
             }
         }

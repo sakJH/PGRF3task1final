@@ -18,6 +18,25 @@ public class Main {
 
     private AbstractRenderer renderer;
 
+    private static int width = 800;
+    private static int height= 600;
+
+    public Main() {
+
+    }
+
+    public AbstractRenderer getRenderer() {
+        return renderer;
+    }
+
+    public static int getWidth() {
+        return width;
+    }
+
+    public static int getHeight() {
+        return height;
+    }
+
     public Main(AbstractRenderer renderer) {
         this.renderer = renderer;
     }
@@ -52,7 +71,7 @@ public class Main {
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); // the window will be resizable
 
         // Create the window
-        window = glfwCreateWindow(800, 600, "PGRF3", NULL, NULL);
+        window = glfwCreateWindow(width, height, "PGRF3", NULL, NULL);
         if ( window == NULL )
             throw new RuntimeException("Failed to create the GLFW window");
 

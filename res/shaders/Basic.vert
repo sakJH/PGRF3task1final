@@ -10,13 +10,95 @@ out vec3 normalVector;
 
 vec3 lightSoure = vec3(0.5, 0.5, 0.1);
 
+const float PI=3.1415926;
+
+uniform int selectedModel;
+out vec4 objectPos;
+
+
+//vec3 getNormal(float x, float y) {
 vec3 getNormal() {
     // TODO: korektně implementovat
+    /*float a = x*PI*2.;
+    float z = y*PI - PI/2.;
+
+    vec3 dx = vec3(-3*sin(a)*cos(z)*PI*2., 2.*cos(a)*cos(z)*2.*PI, 0.);
+    vec3 dy = vec3(-3.*cos(a)*sin(z)*PI, -2.*sin(a)*sin(z)*PI, cos(z)*PI);
+
+    return cross(dx,dy);*/
     return vec3(0., 0., 1.);
 }
 
+
+//Objekty
+// Prstenc ; Kartézská souřadnice 1
+vec3 getRing(vec2 vec) {
+    float azim = vec.y * 2.0 * PI;
+    float zen = vec.x * 2.0 * PI;
+
+    float x = 3 * cos(azim)+cos(zen)*cos(azim);
+    float y = 3 * sin(azim)+cos(zen)*sin(azim);
+    float z = sin(zen);
+
+    return vec3(x, y, z);
+}
+//Sloní hlava - ppt 1-10 -> 67 ; Sférická souřadnice 1
+vec3 getElephantHand(vec2 vec){
+    float azim = vec.x * 2 * PI;
+    float zen = vec.y * PI;
+    float r = 3 + cos(4 * azim);
+
+    float x = r * sin(zen) * cos(azim) ;
+    float y = r * sin(zen) * sin(azim);
+    float z = r * cos(zen);
+
+    return vec3(x, y, z);
+}
+//Sombrero - ppt 1-10 -> 71 ; Cylindr. souřadnice 1
+vec3 getSombrero(vec3 vec){
+    float azimut = vec.x * 2 * PI;
+    float r = vec.y * 2 * PI;
+    float v = 2 * sin(r);
+
+    float x = r * cos(azimut);
+    float y = r * sin(azimut);
+    float z = v;//Snad funguje
+
+    return vec3(x, y, z);
+}
+
+
+
 void main() {
     texCoords = inPosition;
+
+    //???
+    vec2 position = inPosition - 0.1;
+
+
+    //Výber těles
+    if (selectedModel == 0 ){
+        //Default
+    }
+    else if (selectedModel == 1){
+        objectPos = vec4(getRing(position),1.);
+    }
+    else if (selectedModel == 2){
+        objectPos = vec4(getElephantHand(position),1.);
+    }
+    else if (selectedModel == 3){
+        objectPos = vec4(getSombrero(position),1.);
+    }
+    /*else if (selectedModel == 4){
+        //objectPos = vec4(getXXX(position),1.);
+    }
+    else if (selectedModel == 5){
+        //objectPos = vec4(getXXX(position),1.);
+    }
+    else if (selectedModel == 6){
+        //objectPos = vec4(getXXX(position),1.);
+    }*/
+
 
     vec4 objectPosition = u_View * vec4(inPosition, 0.f, 1.f);
 
