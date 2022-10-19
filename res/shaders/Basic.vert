@@ -17,13 +17,13 @@ out vec4 objectPos;
 
 
 //vec3 getNormal(float x, float y) {
-vec3 getNormal() {
+vec3 getNormal() {    // vec2 vec
     // TODO: korektně implementovat
-    /*float a = x*PI*2.;
-    float z = y*PI - PI/2.;
+    /*float azim = vec.x * PI * 2.;
+    float zen = vec.y * PI - PI / 2.;
 
-    vec3 dx = vec3(-3*sin(a)*cos(z)*PI*2., 2.*cos(a)*cos(z)*2.*PI, 0.);
-    vec3 dy = vec3(-3.*cos(a)*sin(z)*PI, -2.*sin(a)*sin(z)*PI, cos(z)*PI);
+    vec3 dx = vec3(-3*sin(azim)*cos(zen)*PI*2., 2.*cos(azim)*cos(zen)*2.*PI, 0.);
+    vec3 dy = vec3(-3.*cos(azim)*sin(zen)*PI, -2.*sin(azim)*sin(zen)*PI, cos(zen)*PI);
 
     return cross(dx,dy);*/
     return vec3(0., 0., 1.);
@@ -77,8 +77,9 @@ void main() {
 
 
     //Výber těles
-    if (selectedModel == 0 ){
+    /*if (selectedModel == 0 ){
         //Default
+        //vec2 pos = inPosition * 2 - 1; float z = 0.5 * cos(sqrt(20 * pow(pos.x, 2) + 20 * pow(pos.y, 2)));
     }
     else if (selectedModel == 1){
         objectPos = vec4(getRing(position),1.);
@@ -107,7 +108,7 @@ void main() {
     toLightVector = lightPosition.xyz - objectPosition.xyz;
     normalVector = transpose(inverse(mat3(u_View))) * getNormal();
 
-
+    //kamera -> NDC souřadnic
     gl_Position = u_Proj * objectPosition;
 }
 

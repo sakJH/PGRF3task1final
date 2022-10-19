@@ -48,7 +48,7 @@ void main() {
 
     } else if (lightMode == 3) {
         // zrcadlova složka
-        outColor = specular * baseColor;
+        outColor = specular + baseColor;
     }
 
     //outColor = (ambient + diffuse + specular) * baseColor;

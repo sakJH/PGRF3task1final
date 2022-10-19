@@ -40,6 +40,7 @@ public class Renderer extends AbstractRenderer {
         glEnable(GL_DEPTH_TEST);
 
         buffers = Grid.gridListTriangle(20, 20);
+        //buffers = Grid.gridStripsTriangle(20,20);
 
 
         camera = new Camera()
@@ -63,9 +64,7 @@ public class Renderer extends AbstractRenderer {
 
         loc_lightMode = glGetUniformLocation(shaderProgram, "lightMode");
 
-        //int loc_uSelectedModel = glGetUniformLocation(shaderProgram, "selectedModel");
-
-
+        //loc_uSelectedModel = glGetUniformLocation(shaderProgram, "selectedModel");
 
         //grid = new Grid(20, 20);
 
@@ -74,6 +73,7 @@ public class Renderer extends AbstractRenderer {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
     }
 
     @Override
@@ -91,9 +91,14 @@ public class Renderer extends AbstractRenderer {
         glUniform1i(loc_uSelectedModel, 1);
         glUniformMatrix4fv(loc_uProj, false, projection.floatArray());
         buffers.draw(GL_TRIANGLES, shaderProgram);
+        //buffers.draw(GL_TRIANGLE_STRIP, shaderProgram);
 
-        //TODO - Vybrání složek osvětlení
-        glUniform1i(loc_lightMode, 1);
+        glUniform1i(loc_uSelectedModel, 2); //
+        glUniformMatrix4fv(loc_uProj, false, new Mat4Scale(10).floatArray());
+        buffers.draw(GL_TRIANGLES, shaderProgram);
+
+        //TODO Něco špatně   L3 -> specular spožku neřešíme -> To jsme měli dodělat???
+        glUniform1i(loc_lightMode, lightModeValue);
 
     }
 
@@ -194,16 +199,18 @@ public class Renderer extends AbstractRenderer {
                     }
                     case GLFW_KEY_E-> {
                         projection = new Mat4OrthoRH(2.5, 2.5, 0.1, 20);
-                        System.out.println("Q");
+                        System.out.println("E");
                     }
-
-                    //Objekty
-
                     //Osvětlovací model
                     case GLFW_KEY_L -> {
-                        if (lightModeValue == 3 ) {lightModeValue = 0;}
+                        if (lightModeValue == 3 ) {
+                            lightModeValue = 0; System.out.println("L " + lightModeValue);}
                         else {
-                            lightModeValue++; }
+                            lightModeValue++; System.out.println("L " + lightModeValue);}
+                    }
+                    //Objekty
+                    case GLFW_KEY_1 -> {
+
                     }
                 }
             }
