@@ -3,6 +3,7 @@ import lwjglutils.OGLTexture2D;
 import lwjglutils.ShaderUtils;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFWCursorPosCallback;
+import org.lwjgl.glfw.GLFWKeyCallback;
 import org.lwjgl.glfw.GLFWMouseButtonCallback;
 import org.lwjgl.glfw.GLFWScrollCallback;
 import transforms.Camera;
@@ -25,6 +26,9 @@ public class Renderer extends AbstractRenderer {
     private OGLTexture2D texture;
     private boolean mouseButton1;
     private double ox, oy;
+
+    double camSpeed = 0.25;
+    float time = 0;
 
     @Override
     public void init() {
@@ -116,34 +120,17 @@ public class Renderer extends AbstractRenderer {
                 camera = camera.mulRadius(1.1f);
             else
                 camera = camera.mulRadius(0.9f);
-
         }
     };
 
-    @Override
-    public GLFWScrollCallback getScrollCallback() {
-        return scrollCallback;
-    }
-
-    @Override
-    public GLFWMouseButtonCallback getMouseCallback() {
-        return mbCallback;
-    }
-
-    @Override
-    public GLFWCursorPosCallback getCursorCallback() {
-        return cpCallbacknew;
-    }
-    
-    
-  
     protected GLFWKeyCallback keyCallback = new GLFWKeyCallback() {
         @Override
         public void invoke(long window, int key, int scancode, int action, int mods) {
-            if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) glfwSetWindowShouldClose(window, true); // We will detect this in the rendering loop
+            if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE)
+                glfwSetWindowShouldClose(window, true); // We will detect this in the rendering loop
 
-            if (action == GLFW_PRESS || action == GLFW_REPEAT){
-                switch (key){
+            if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+                switch (key) {
                     case GLFW_KEY_W -> {
                         camera = camera.forward(camSpeed);
                         System.out.println("S");
@@ -162,22 +149,38 @@ public class Renderer extends AbstractRenderer {
                     }
                     //Up, Down
                     case GLFW_KEY_LEFT_SHIFT -> {
-                        camera = camera.up(1);
-                        System.out.println("D");
+                        camera = camera.up(camSpeed);
+                        System.out.println("L-Shift");
                     }
                     case GLFW_KEY_LEFT_CONTROL -> {
-                        camera = camera.down(1);
-                        System.out.println("D");
+                        camera = camera.down(camSpeed);
+                        System.out.println("L-CTRL");
                     }
                     // Perspektivní a ortogonální projekce
                     case GLFW_KEY_P -> camera = camera.withFirstPerson(!camera.getFirstPerson());
-
                 }
             }
-
-
         }
     };
 
+    @Override
+    public GLFWScrollCallback getScrollCallback() {
+        return scrollCallback;
+    }
+
+    @Override
+    public GLFWMouseButtonCallback getMouseCallback() {
+        return mbCallback;
+    }
+
+    @Override
+    public GLFWCursorPosCallback getCursorCallback() {
+        return cpCallbacknew;
+    }
+
+    @Override
+    public GLFWKeyCallback getKeyCallback() {
+        return keyCallback;
+    }
 }
 

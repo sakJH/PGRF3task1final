@@ -58,7 +58,7 @@ public class Grid {
         return buffers;
     }
 
-    public static OGLBuffers  gridStripsTriangle(int m, int n)
+    public static OGLBuffers gridStripsTriangle(int m, int n)
     {
         float[] vertices = new float[2 * m * n];
         int[] indices = new int[3 * 2 * (m - 1) * (n - 1)];
@@ -108,7 +108,7 @@ public class Grid {
 
 
     //OLD
-    /*
+
     public Grid(final int m, final int n) {
         float[] vertices = new float[2 * m * n];
         int[] indices = new int[3 * 2 * (m - 1) * (n - 1)];
@@ -153,7 +153,7 @@ public class Grid {
 
         buffers = new OGLBuffers(vertices, attribs, indices);
 
-    }*/
+    }
 
     public OGLBuffers getBuffers() {
         return buffers;
