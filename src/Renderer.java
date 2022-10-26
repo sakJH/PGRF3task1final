@@ -1,6 +1,4 @@
-import lwjglutils.OGLBuffers;
-import lwjglutils.OGLTexture2D;
-import lwjglutils.ShaderUtils;
+import lwjglutils.*;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFWCursorPosCallback;
 import org.lwjgl.glfw.GLFWKeyCallback;
@@ -8,6 +6,7 @@ import org.lwjgl.glfw.GLFWMouseButtonCallback;
 import org.lwjgl.glfw.GLFWScrollCallback;
 import transforms.*;
 
+import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.nio.DoubleBuffer;
 
@@ -29,17 +28,30 @@ public class Renderer extends AbstractRenderer {
     float time = 0;
     private Main main;
 
-    int loc_uColorR, loc_uProj, loc_uView, loc_uSelectedModel, loc_lightMode;
+    int loc_uColorR, loc_uProj, loc_uView, loc_uSelectedModel, loc_lightMode, loc_uModel;
 
-    OGLBuffers buffers;
+    private OGLBuffers buffers;
     int lightModeValue = 0;
+
+    private OGLTexture2D.Viewer texture2D;
+    private OGLTextRenderer textHelper;
+
+    private int selectedModel = 0;
+
+    private int gridM = 20; private int gridN = 20;
+
+    Mat4 model, rotation, translation, scale;
+
+    private boolean orthoProjection = false;
+
+    private int button;
 
     @Override
     public void init() {
-        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glEnable(GL_DEPTH_TEST);
 
-        buffers = Grid.gridListTriangle(20, 20);
+        buffers = Grid.gridListTriangle(gridM, gridN);
         //buffers = Grid.gridStripsTriangle(20,20);
 
 
@@ -52,6 +64,7 @@ public class Renderer extends AbstractRenderer {
         projection = new Mat4PerspRH(Math.PI / 3, Main.getHeight() / (float) Main.getWidth(), 0.1f, 50.f);
 
 
+
         shaderProgram = ShaderUtils.loadProgram("/shaders/Basic");
         glUseProgram(shaderProgram);
 
@@ -62,17 +75,28 @@ public class Renderer extends AbstractRenderer {
         loc_uProj = glGetUniformLocation(shaderProgram, "u_Proj");
         glUniformMatrix4fv(loc_uProj, false, projection.floatArray());
 
+
+        //loc_uModel = glGetUniformLocation(shaderProgram, "u_Model");
+        //glUniformMatrix4fv(loc_uModel, false, ToFloatArray.convert(model));
+
+
+
         loc_lightMode = glGetUniformLocation(shaderProgram, "lightMode");
 
-        //loc_uSelectedModel = glGetUniformLocation(shaderProgram, "selectedModel");
-
-        //grid = new Grid(20, 20);
+        texture2D = new OGLTexture2D.Viewer();
+        textHelper = new OGLTextRenderer(Main.getWidth(), Main.getHeight());
 
         try {
             texture = new OGLTexture2D("./textures/bricks.jpg");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        model = new Mat4Identity();
+        rotation = new Mat4Identity();
+        translation = new Mat4Identity();
+        scale = new Mat4Identity();
+
 
     }
 
@@ -88,17 +112,20 @@ public class Renderer extends AbstractRenderer {
         loc_uSelectedModel = glGetUniformLocation(shaderProgram, "selectedModel");
 
         //TODO - Vybrání modelů (6x)
-        glUniform1i(loc_uSelectedModel, 1);
+        glUniform1i(loc_uSelectedModel, selectedModel);
         glUniformMatrix4fv(loc_uProj, false, projection.floatArray());
         buffers.draw(GL_TRIANGLES, shaderProgram);
-        //buffers.draw(GL_TRIANGLE_STRIP, shaderProgram);
 
-        glUniform1i(loc_uSelectedModel, 2); //
-        glUniformMatrix4fv(loc_uProj, false, new Mat4Scale(10).floatArray());
-        buffers.draw(GL_TRIANGLES, shaderProgram);
-
-        //TODO Něco špatně   L3 -> specular spožku neřešíme -> To jsme měli dodělat???
+        //TODO Něco špatně   L3 -> specular spožku neřešíme -> Nebo jsme to měli dodělat?
         glUniform1i(loc_lightMode, lightModeValue);
+
+
+        //TODO
+        //texture2D.view();
+
+        //textHelper.addStr2D(5, 15, "Task 1");
+
+
 
     }
 
@@ -106,13 +133,32 @@ public class Renderer extends AbstractRenderer {
         @Override
         public void invoke(long window, double x, double y) {
             if (mouseButton1) {
-                camera = camera.addAzimuth((double) Math.PI * (ox - x) / Main.getWidth())
-                        .addZenith((double) Math.PI * (oy - y) / Main.getWidth());
-                ox = x;
-                oy = y;
+                if (button == GLFW_MOUSE_BUTTON_LEFT)
+                {
+                    //Pohyb s kamerou
+                    camera = camera.addAzimuth((double) Math.PI * (ox - x) / Main.getWidth())
+                            .addZenith((double) Math.PI * (oy - y) / Main.getWidth());
+                    ox = x;
+                    oy = y;
+                    System.out.println("Left---");
+                }
+                //Rotace
+                if (button == GLFW_MOUSE_BUTTON_RIGHT)
+                {
+                    System.out.println("Right rotation");
+                    double rotX = (ox - x) / 15.0;
+                    double rotY = (oy - y) / 15.0;
+                    rotation = rotation.mul(new Mat4RotXYZ(rotX, 0, rotY));
+                    projection = rotation.mul(translation);
+                    ox = x;
+                    oy = y;
+                }
+                //Transltion
             }
         }
     };
+
+
 
     private GLFWMouseButtonCallback mbCallback = new GLFWMouseButtonCallback () {
         @Override
@@ -186,21 +232,36 @@ public class Renderer extends AbstractRenderer {
                         camera = camera.down(camSpeed);
                         System.out.println("L-CTRL");
                     }
+
+                    //TODO - reset
+                    case GLFW_KEY_R -> {
+                        model = new Mat4Identity();
+                        rotation = new Mat4Identity();
+                        translation = new Mat4Identity();
+                    }
+
                     // Perspektivní a ortogonální projekce
                     //case GLFW_KEY_P -> camera = camera.withFirstPerson(!camera.getFirstPerson());
-                    case GLFW_KEY_Q -> {
-                        projection = new Mat4PerspRH(
-                                Math.PI / 3,
-                                height / (float) width,
-                                0.1,
-                                20
-                        );
+                    case GLFW_KEY_P -> {
+                        projection = new Mat4PerspRH(Math.PI / 3, Main.getHeight() / (float) Main.getWidth(), 0.1f, 50.f);
                         System.out.println("Q");
                     }
-                    case GLFW_KEY_E-> {
-                        projection = new Mat4OrthoRH(2.5, 2.5, 0.1, 20);
+                    case GLFW_KEY_O-> {
+                        projection = new Mat4OrthoRH(2.3, 2.3, 0.1, 20);
                         System.out.println("E");
                     }
+
+                    //List / Strip
+                    case GLFW_KEY_I -> {
+                        buffers = Grid.gridListTriangle(gridM, gridM);
+                        buffers.draw(GL_TRIANGLES, shaderProgram);
+                    }
+                    //TODO -> Problém - zůstává GL_TRIANGLES (asi)
+                    case GLFW_KEY_U -> {
+                        buffers = Grid.gridStripsTriangle(gridM, gridN);
+                        buffers.draw(GL_TRIANGLE_STRIP, shaderProgram);
+                    }
+
                     //Osvětlovací model
                     case GLFW_KEY_L -> {
                         if (lightModeValue == 3 ) {
@@ -209,8 +270,11 @@ public class Renderer extends AbstractRenderer {
                             lightModeValue++; System.out.println("L " + lightModeValue);}
                     }
                     //Objekty
-                    case GLFW_KEY_1 -> {
+                    case GLFW_KEY_M -> {
+                        if (selectedModel >= 6) {selectedModel = 0 ;}
+                        selectedModel++;
 
+                        System.out.println("Object " + selectedModel);
                     }
                 }
             }
@@ -236,5 +300,15 @@ public class Renderer extends AbstractRenderer {
     public GLFWKeyCallback getKeyCallback() {
         return keyCallback;
     }
+
+
+    private void setProjection(boolean ortho) {
+        if(ortho) {
+            projection = new Mat4PerspRH(Math.PI / 3, Main.getHeight() / (float) Main.getWidth(), 0.1f, 50.f);
+            return;
+        }
+        projection = new Mat4PerspRH(Math.PI / 3, Main.getHeight() / (float) Main.getWidth(), 0.01f, 50.f);
+    }
 }
+
 
