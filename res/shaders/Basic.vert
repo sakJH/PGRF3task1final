@@ -5,6 +5,17 @@ uniform mat4 u_View;
 uniform mat4 u_Proj;
 uniform mat4 u_Model;
 
+//TODO
+uniform float type;
+uniform float time;
+out vec3 objectPos;
+out vec3 normalDir;
+out vec3 eyeVec;
+uniform vec3 eyePos;
+
+
+
+
 out vec2 texCoords;
 out vec3 toLightVector;
 out vec3 normalVector;
@@ -14,7 +25,7 @@ vec3 lightSoure = vec3(0.5, 0.5, 0.1);
 const float PI = 3.1415926;
 
 uniform int selectedModel;
-out vec4 objectPos;
+out vec4 objectPosition;
 
 
 //vec3 getNormal(float x, float y) {
@@ -74,11 +85,10 @@ vec3 getSombrero(vec3 vec){
 
     float x = r * cos(azimut);
     float y = r * sin(azimut);
-    float z = v;//Snad funguje
+    float z = v;
 
-    return vec3(x, y, z);
+    return vec3(x, y, z); //TODO - nefunguje
 }
-
 
 
 void main() {
@@ -95,19 +105,21 @@ void main() {
     if (selectedModel == 0 ){
         //Default
         //vec2 pos = inPosition * 2 - 1; float z = 0.5 * cos(sqrt(20 * pow(pos.x, 2) + 20 * pow(pos.y, 2)));
-        normal = getPlotNormal(position);
+        //normal = getPlotNormal(position);
+        normal = getNormal(position);
         finalPos = getPlot(position);
     }
     else if (selectedModel == 1){
-        //objectPos = vec4(getRing(position),1.);
+        normal = getNormal(position);
         finalPos = getRing(position);
     }
     else if (selectedModel == 2){
-        //objectPos = vec4(getElephantHand(position),1.);
+        normal = getNormal(position);
         finalPos = getElephantHand(position);
     }
     else if (selectedModel == 3){
-        //objectPos = vec4(getSombrero(position),1.);
+        //normal = getNormal(position);
+        //finalPos = getSombrero(position);
     }
     else if (selectedModel == 4){
         //objectPos = vec4(getXXX(position),1.);
@@ -119,17 +131,24 @@ void main() {
         //objectPos = vec4(getXXX(position),1.);
     }
 
-
-    vec4 objectPosition = vec4(inPosition, 0.f, 1.f);
-
+    //vec4 objectPosition = vec4(inPosition, 0.f, 1.f);
     // Phong
     vec4 lightPosition = u_View * vec4(lightSoure, 1.);
     toLightVector = lightPosition.xyz - objectPosition.xyz;
     //normalVector = transpose(inverse(mat3(u_View))) * getNormal();
 
+    vec2 a = vec2(float (2));
+
+    objectPos = finalPos;
+    normalDir = inverse(transpose(mat3(u_Model))) * normal;
+
+    vec4 finalPos4 = u_Model * vec4(finalPos,1.0);
+
+    eyeVec = normalize(eyePos - finalPos4.xyz);
+
+    vec4 pos4 = vec4(finalPos, 1.0);
     //kamera -> NDC souřadnic
-    //gl_Position = u_Proj * u_Model * u_View * objectPosition;
-    gl_Position = u_Proj * u_View * objectPosition;
+    gl_Position = u_Proj * u_View * u_Model * pos4;
 }
 
 
