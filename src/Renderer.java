@@ -42,6 +42,8 @@ public class Renderer extends AbstractRenderer {
 
     Mat4 model, rotation, translation, scale;
 
+    private int scaleVal = 0;
+
     private boolean orthoProjection = false;
 
     private int button;
@@ -71,14 +73,13 @@ public class Renderer extends AbstractRenderer {
         // Color
         loc_uColorR = glGetUniformLocation(shaderProgram, "u_ColorR");
         glUniform1f(loc_uColorR, 1.f);
+
         // Proj
         loc_uProj = glGetUniformLocation(shaderProgram, "u_Proj");
         glUniformMatrix4fv(loc_uProj, false, projection.floatArray());
 
 
-        //loc_uModel = glGetUniformLocation(shaderProgram, "u_Model");
-        //glUniformMatrix4fv(loc_uModel, false, ToFloatArray.convert(model));
-
+        loc_uModel = glGetUniformLocation(shaderProgram, "u_Model");
 
 
         loc_lightMode = glGetUniformLocation(shaderProgram, "lightMode");
@@ -107,17 +108,19 @@ public class Renderer extends AbstractRenderer {
         glUniformMatrix4fv(loc_uView, false, camera.getViewMatrix().floatArray());
 
         texture.bind();
-        //grid.getBuffers().draw(GL_TRIANGLES, shaderProgram);
 
         loc_uSelectedModel = glGetUniformLocation(shaderProgram, "selectedModel");
 
         //TODO - Vybrání modelů (6x)
         glUniform1i(loc_uSelectedModel, selectedModel);
         glUniformMatrix4fv(loc_uProj, false, projection.floatArray());
-        buffers.draw(GL_TRIANGLES, shaderProgram);
 
-        //TODO Něco špatně   L3 -> specular spožku neřešíme -> Nebo jsme to měli dodělat?
+
+        //TODO - specular spožku
         glUniform1i(loc_lightMode, lightModeValue);
+
+        //Model
+        glUniformMatrix4fv(loc_uModel, false, ToFloatArray.convert(model));
 
 
         //TODO
@@ -125,8 +128,7 @@ public class Renderer extends AbstractRenderer {
 
         //textHelper.addStr2D(5, 15, "Task 1");
 
-
-
+        buffers.draw(GL_TRIANGLES, shaderProgram);
     }
 
     private GLFWCursorPosCallback cpCallbacknew = new GLFWCursorPosCallback() {
@@ -140,25 +142,34 @@ public class Renderer extends AbstractRenderer {
                             .addZenith((double) Math.PI * (oy - y) / Main.getWidth());
                     ox = x;
                     oy = y;
-                    System.out.println("Left---");
+                    System.out.println("Left GLFWCursorPosCallback");
                 }
                 //Rotace
-                if (button == GLFW_MOUSE_BUTTON_RIGHT)
+                else if (button == GLFW_MOUSE_BUTTON_RIGHT)
                 {
-                    System.out.println("Right rotation");
+                    System.out.println("Right rotation");  //TODO Stále nefunguje
                     double rotX = (ox - x) / 15.0;
                     double rotY = (oy - y) / 15.0;
                     rotation = rotation.mul(new Mat4RotXYZ(rotX, 0, rotY));
-                    projection = rotation.mul(translation);
+                    model = rotation.mul(translation);
                     ox = x;
                     oy = y;
                 }
-                //Transltion
+                //Translation
+                else if (button == GLFW_MOUSE_BUTTON_MIDDLE)
+                {
+                    System.out.println("middle"); //TODO Stále nefunguje
+
+                    double trX = (ox - x) / 50;
+                    double trY = (oy - y) / 50;
+                    translation = translation.mul(new Mat4Transl(trX, trY, 0));
+                    model = rotation.mul(translation);
+                    ox = x;
+                    oy = y;
+                }
             }
         }
     };
-
-
 
     private GLFWMouseButtonCallback mbCallback = new GLFWMouseButtonCallback () {
         @Override
@@ -244,11 +255,21 @@ public class Renderer extends AbstractRenderer {
                     //case GLFW_KEY_P -> camera = camera.withFirstPerson(!camera.getFirstPerson());
                     case GLFW_KEY_P -> {
                         projection = new Mat4PerspRH(Math.PI / 3, Main.getHeight() / (float) Main.getWidth(), 0.1f, 50.f);
-                        System.out.println("Q");
+                        System.out.println("P");
                     }
                     case GLFW_KEY_O-> {
                         projection = new Mat4OrthoRH(2.3, 2.3, 0.1, 20);
-                        System.out.println("E");
+                        System.out.println("O");
+                    }
+
+                    //Scale
+                    case GLFW_KEY_Z -> {
+                        projection = projection.mul(new Mat4Scale(0.9,0.9,0.9));
+                        System.out.println("scale --");
+                    }
+                    case GLFW_KEY_X -> {
+                        projection = projection.mul(new Mat4Scale(1.1,1.1,1.1));
+                        System.out.println("scale++");
                     }
 
                     //List / Strip

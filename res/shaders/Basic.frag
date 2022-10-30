@@ -13,13 +13,11 @@ out vec4 outColor;
 
 uniform int lightMode;
 
-//vec4 ambientColor = vec4(0.9, 0.1, 0.1, 1.);
-//vec4 diffuseColor = vec4(0.9, 0.9, 0.9, 1.);
-
 vec4 ambientColor = vec4(0.9, 0.1, 0.1, 0.1);
 vec4 diffuseColor = vec4(0.9, 0.9, 0.9, 0.1);
 
 void main() {
+
     vec4 baseColor = texture(textureBricks, texCoords);
 
     // Diffuse
@@ -31,8 +29,9 @@ void main() {
     vec4 diffuse = NDotL * diffuseColor;
     vec4 specular = vec4(0);
 
-    //vec4 specular = vec4(pow(NdotH, 16)*vec3(1.0), 1);
-    //totalSpecular = specular * ( pow( NDotH, specularPower*4.0 ) );
+    /*float NdotH = dot(normalize(normalIO), halfVector);
+    vec4 specular = vec4(pow(NdotH, 16) * vec3(1.0), 1);
+    totalSpecular = specular * ( pow( NDotH, specularPower*4.0 ) );*/
 
 
     if (lightMode == 0) {

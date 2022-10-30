@@ -100,9 +100,11 @@ void main() {
     }
     else if (selectedModel == 1){
         //objectPos = vec4(getRing(position),1.);
+        finalPos = getRing(position);
     }
     else if (selectedModel == 2){
         //objectPos = vec4(getElephantHand(position),1.);
+        finalPos = getElephantHand(position);
     }
     else if (selectedModel == 3){
         //objectPos = vec4(getSombrero(position),1.);
