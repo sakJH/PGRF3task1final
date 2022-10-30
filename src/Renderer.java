@@ -21,7 +21,7 @@ public class Renderer extends AbstractRenderer {
     private Camera camera;
     private Mat4 projection;
     private OGLTexture2D texture;
-    private boolean mouseButton1;
+    private boolean mouseButton1, mouseButton2;
     private double ox, oy;
 
     double camSpeed = 0.25;
@@ -145,7 +145,7 @@ public class Renderer extends AbstractRenderer {
                     System.out.println("Left GLFWCursorPosCallback");
                 }
                 //Rotace
-                else if (button == GLFW_MOUSE_BUTTON_RIGHT)
+                /*else if (button == GLFW_MOUSE_BUTTON_RIGHT)
                 {
                     System.out.println("Right rotation");  //TODO Stále nefunguje
                     double rotX = (ox - x) / 15.0;
@@ -166,8 +166,28 @@ public class Renderer extends AbstractRenderer {
                     model = rotation.mul(translation);
                     ox = x;
                     oy = y;
+                }*/
+            }
+
+            //
+            if (mouseButton2)
+            {
+                System.out.println("Ritttt"); //TODO VYPISUJE
+                if (button == GLFW_MOUSE_BUTTON_RIGHT)
+                {
+                    System.out.println("Right rotation");  //TODO ALE Stále nefunguje
+                    double rotX = (ox - x) / 15.0;
+                    double rotY = (oy - y) / 15.0;
+                    rotation = rotation.mul(new Mat4RotXYZ(rotX, 0, rotY));
+                    model = rotation.mul(translation);
+                    ox = x;
+                    oy = y;
                 }
             }
+
+
+
+
         }
     };
 
@@ -197,6 +217,30 @@ public class Renderer extends AbstractRenderer {
                 ox = x;
                 oy = y;
             }
+
+            //Right Mouse
+            if (button==GLFW_MOUSE_BUTTON_2 && action == GLFW_PRESS){
+                mouseButton2 = true;
+                DoubleBuffer xBuffer = BufferUtils.createDoubleBuffer(1);
+                DoubleBuffer yBuffer = BufferUtils.createDoubleBuffer(1);
+                glfwGetCursorPos(window, xBuffer, yBuffer);
+                ox = xBuffer.get(0);
+                oy = yBuffer.get(0);
+            }
+            if (button==GLFW_MOUSE_BUTTON_2 && action == GLFW_RELEASE){
+                mouseButton2 = false;
+                DoubleBuffer xBuffer = BufferUtils.createDoubleBuffer(1);
+                DoubleBuffer yBuffer = BufferUtils.createDoubleBuffer(1);
+                glfwGetCursorPos(window, xBuffer, yBuffer);
+                double x = xBuffer.get(0);
+                double y = yBuffer.get(0);
+                camera = camera.addAzimuth((double) Math.PI * (ox - x) / Main.getWidth())
+                        .addZenith((double) Math.PI * (oy - y) / Main.getWidth());
+                ox = x;
+                oy = y;
+            }
+
+
         }
     };
 
