@@ -16,8 +16,6 @@ import static org.lwjgl.opengl.GL33.*;
 
 public class Renderer extends AbstractRenderer {
     private int shaderProgram;
-    //private Grid grid;
-
     private Camera camera;
     private Mat4 projection;
     private OGLTexture2D texture;
@@ -161,7 +159,7 @@ public class Renderer extends AbstractRenderer {
             if (mouseButton3)
             {
                 System.out.println(mouseButton3 + " mb3");
-                System.out.println(button + " mb3");  //TODO opravit -> button == 0, ta ale GLFW_MOUSE_BUTTON_... neexistuje!!!
+                System.out.println(button + " mb3");  //TODO opravit
                 System.out.println(GLFW_MOUSE_BUTTON_MIDDLE);
                 //Translation
                 if (button == GLFW_MOUSE_BUTTON_2)

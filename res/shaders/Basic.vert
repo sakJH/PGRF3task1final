@@ -28,9 +28,8 @@ uniform int selectedModel;
 out vec4 objectPosition;
 
 
-//vec3 getNormal(float x, float y) {
-vec3 getNormal(vec2 vec) {    // vec2 vec
-    // TODO: korektně implementovat
+
+vec3 getNormal(vec2 vec) {
     float azim = vec.x * PI * 2.;
     float zen = vec.y * PI - PI / 2.;
 
@@ -41,8 +40,7 @@ vec3 getNormal(vec2 vec) {    // vec2 vec
 }
 
 
-//Objekty
-
+//OBJEKTY
 // Kartézská souřadnice 1
 vec3 getPlot(vec2 vec) {
     return vec3(vec.x, vec.y, 0.5 * cos(sqrt(20 * vec.x * vec.x + 20 * vec.y * vec.y)));
@@ -52,7 +50,6 @@ vec3 getPlotNormal(vec2 vec) {
     vec3 v = getPlot(vec + vec2(0, 0.001)) - getPlot(vec - vec2(0, 0.001));
     return cross(u, v);
 }
-
 
 // Prstenc ; Kartézská souřadnice 2
 vec3 getRing(vec2 vec) {
@@ -79,33 +76,41 @@ vec3 getElephantHand(vec2 vec){
 }
 //Sombrero - ppt 1-10 -> 71 ; Cylindr. souřadnice 1
 vec3 getSombrero(vec3 vec){
-    float azimut = vec.x * 2 * PI;
-    float r = vec.y * 2 * PI;
+    float azim = vec.x * 2 * PI;
+    float zen = vec.y * 2 * PI;
+    float r = 2 * sin(zen);
+
+    float x = zen * cos(azi);
+    float y = zen * sin(azi);
+    float z = r;
+
+    return vec3(x, y, z); //TODO - nefunguje
+}
+
+vec3 getSombrero2(vec3 vec){
+    float azimut = ;
+    float r = ;
     float v = 2 * sin(r);
 
     float x = r * cos(azimut);
-    float y = r * sin(azimut);
-    float z = v;
+    float y = r* sin(azimut);
+    float z = z;
 
-    return vec3(x, y, z); //TODO - nefunguje
+
+    return(x,y,z);
 }
 
 
 void main() {
     texCoords = inPosition;
 
-    //???
     vec2 position = inPosition - 0.1;
 
     vec3 normal;
     vec3 finalPos;
 
-
     //Výber těles
     if (selectedModel == 0 ){
-        //Default
-        //vec2 pos = inPosition * 2 - 1; float z = 0.5 * cos(sqrt(20 * pow(pos.x, 2) + 20 * pow(pos.y, 2)));
-        //normal = getPlotNormal(position);
         normal = getNormal(position);
         finalPos = getPlot(position);
     }
@@ -118,20 +123,23 @@ void main() {
         finalPos = getElephantHand(position);
     }
     else if (selectedModel == 3){
-        //normal = getNormal(position);
+        normal = getNormal(position);
         //finalPos = getSombrero(position);
     }
     else if (selectedModel == 4){
-        //objectPos = vec4(getXXX(position),1.);
+        normal = getNormal(position);
+        //finalPos = getXXX(position);
     }
     else if (selectedModel == 5){
-        //objectPos = vec4(getXXX(position),1.);
+        normal = getNormal(position);
+        //finalPos = getXXX(position);
     }
     else if (selectedModel == 6){
-        //objectPos = vec4(getXXX(position),1.);
+        normal = getNormal(position);
+        //finalPos = getXXX(position);
     }
 
-    //vec4 objectPosition = vec4(inPosition, 0.f, 1.f);
+
     // Phong
     vec4 lightPosition = u_View * vec4(lightSoure, 1.);
     toLightVector = lightPosition.xyz - objectPosition.xyz;
