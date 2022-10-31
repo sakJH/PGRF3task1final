@@ -21,7 +21,7 @@ public class Renderer extends AbstractRenderer {
     private Camera camera;
     private Mat4 projection;
     private OGLTexture2D texture;
-    private boolean mouseButton1, mouseButton2;
+    private boolean mouseButton1, mouseButton2, mouseButton3;
     private double ox, oy;
 
     double camSpeed = 0.25;
@@ -142,61 +142,50 @@ public class Renderer extends AbstractRenderer {
                             .addZenith((double) Math.PI * (oy - y) / Main.getWidth());
                     ox = x;
                     oy = y;
-                    System.out.println("Left GLFWCursorPosCallback");
                 }
-                //Rotace
-                /*else if (button == GLFW_MOUSE_BUTTON_RIGHT)
+            }
+            //
+            if (mouseButton2)
+            {
+                if (button == GLFW_MOUSE_BUTTON_1)
                 {
-                    System.out.println("Right rotation");  //TODO Stále nefunguje
-                    double rotX = (ox - x) / 15.0;
-                    double rotY = (oy - y) / 15.0;
+                    System.out.println("Right Mouse rotation");
+                    double rotX = (ox - x) / 50.0;
+                    double rotY = (oy - y) / 50.0;
                     rotation = rotation.mul(new Mat4RotXYZ(rotX, 0, rotY));
                     model = rotation.mul(translation);
                     ox = x;
                     oy = y;
                 }
+            }
+            if (mouseButton3)
+            {
+                System.out.println(mouseButton3 + " mb3");
+                System.out.println(button + " mb3");  //TODO opravit -> button == 0, ta ale GLFW_MOUSE_BUTTON_... neexistuje!!!
+                System.out.println(GLFW_MOUSE_BUTTON_MIDDLE);
                 //Translation
-                else if (button == GLFW_MOUSE_BUTTON_MIDDLE)
+                if (button == GLFW_MOUSE_BUTTON_2)
                 {
-                    System.out.println("middle"); //TODO Stále nefunguje
-
+                    System.out.println("middle §§§!!!!!§§§");
                     double trX = (ox - x) / 50;
                     double trY = (oy - y) / 50;
                     translation = translation.mul(new Mat4Transl(trX, trY, 0));
                     model = rotation.mul(translation);
                     ox = x;
                     oy = y;
-                }*/
-            }
-
-            //
-            if (mouseButton2)
-            {
-                System.out.println("Ritttt"); //TODO VYPISUJE
-                if (button == GLFW_MOUSE_BUTTON_RIGHT)
-                {
-                    System.out.println("Right rotation");  //TODO ALE Stále nefunguje
-                    double rotX = (ox - x) / 15.0;
-                    double rotY = (oy - y) / 15.0;
-                    rotation = rotation.mul(new Mat4RotXYZ(rotX, 0, rotY));
-                    model = rotation.mul(translation);
-                    ox = x;
-                    oy = y;
                 }
             }
-
-
-
-
         }
     };
 
     private GLFWMouseButtonCallback mbCallback = new GLFWMouseButtonCallback () {
         @Override
         public void invoke(long window, int button, int action, int mods) {
-            mouseButton1 = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS;
-
-            if (button==GLFW_MOUSE_BUTTON_1 && action == GLFW_PRESS){
+            mouseButton1 = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+            mouseButton2 = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
+            mouseButton3 = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS;
+            //Left Mouse
+            if (button==GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS){
                 mouseButton1 = true;
                 DoubleBuffer xBuffer = BufferUtils.createDoubleBuffer(1);
                 DoubleBuffer yBuffer = BufferUtils.createDoubleBuffer(1);
@@ -205,7 +194,7 @@ public class Renderer extends AbstractRenderer {
                 oy = yBuffer.get(0);
             }
 
-            if (button==GLFW_MOUSE_BUTTON_1 && action == GLFW_RELEASE){
+            if (button==GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE){
                 mouseButton1 = false;
                 DoubleBuffer xBuffer = BufferUtils.createDoubleBuffer(1);
                 DoubleBuffer yBuffer = BufferUtils.createDoubleBuffer(1);
@@ -217,9 +206,8 @@ public class Renderer extends AbstractRenderer {
                 ox = x;
                 oy = y;
             }
-
             //Right Mouse
-            if (button==GLFW_MOUSE_BUTTON_2 && action == GLFW_PRESS){
+            if (button==GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS){
                 mouseButton2 = true;
                 DoubleBuffer xBuffer = BufferUtils.createDoubleBuffer(1);
                 DoubleBuffer yBuffer = BufferUtils.createDoubleBuffer(1);
@@ -227,7 +215,7 @@ public class Renderer extends AbstractRenderer {
                 ox = xBuffer.get(0);
                 oy = yBuffer.get(0);
             }
-            if (button==GLFW_MOUSE_BUTTON_2 && action == GLFW_RELEASE){
+            if (button==GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE){
                 mouseButton2 = false;
                 DoubleBuffer xBuffer = BufferUtils.createDoubleBuffer(1);
                 DoubleBuffer yBuffer = BufferUtils.createDoubleBuffer(1);
@@ -239,8 +227,27 @@ public class Renderer extends AbstractRenderer {
                 ox = x;
                 oy = y;
             }
-
-
+            //Midle Mouse
+            if (button==GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS){
+                mouseButton3 = true;
+                DoubleBuffer xBuffer = BufferUtils.createDoubleBuffer(1);
+                DoubleBuffer yBuffer = BufferUtils.createDoubleBuffer(1);
+                glfwGetCursorPos(window, xBuffer, yBuffer);
+                ox = xBuffer.get(0);
+                oy = yBuffer.get(0);
+            }
+            if (button==GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE){
+                mouseButton3 = false;
+                DoubleBuffer xBuffer = BufferUtils.createDoubleBuffer(1);
+                DoubleBuffer yBuffer = BufferUtils.createDoubleBuffer(1);
+                glfwGetCursorPos(window, xBuffer, yBuffer);
+                double x = xBuffer.get(0);
+                double y = yBuffer.get(0);
+                camera = camera.addAzimuth((double) Math.PI * (ox - x) / Main.getWidth())
+                        .addZenith((double) Math.PI * (oy - y) / Main.getWidth());
+                ox = x;
+                oy = y;
+            }
         }
     };
 
@@ -369,7 +376,7 @@ public class Renderer extends AbstractRenderer {
 
     private void setProjection(boolean ortho) {
         if(ortho) {
-            projection = new Mat4PerspRH(Math.PI / 3, Main.getHeight() / (float) Main.getWidth(), 0.1f, 50.f);
+            projection = new Mat4OrthoRH(Math.PI / 3, Main.getHeight() / (float) Main.getWidth(), 0.1f, 50.f);
             return;
         }
         projection = new Mat4PerspRH(Math.PI / 3, Main.getHeight() / (float) Main.getWidth(), 0.01f, 50.f);
