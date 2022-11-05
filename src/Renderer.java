@@ -27,7 +27,7 @@ public class Renderer extends AbstractRenderer {
     float time = 0;
     private Main main;
 
-    int loc_uColorR, loc_uProj, loc_uView, loc_uSelectedModel, loc_lightMode, loc_uModel;
+    int loc_uColorR, loc_uProj, loc_uView, loc_uSelectedModel, loc_lightMode, loc_uModel, loc_secondObj, loc_time;
 
     private OGLBuffers buffers;
 
@@ -51,6 +51,10 @@ public class Renderer extends AbstractRenderer {
     private boolean orthoProjection = false;
 
     private int button;
+
+    //Second Object
+    private Mat4 secondObjMove;
+    private Vec3D secondObjPos;
 
     @Override
     public void init() {
@@ -83,8 +87,11 @@ public class Renderer extends AbstractRenderer {
 
         loc_uModel = glGetUniformLocation(shaderProgram, "u_Model");
 
-
         loc_lightMode = glGetUniformLocation(shaderProgram, "lightMode");
+
+        //Second Obj
+        loc_secondObj = glGetUniformLocation(shaderProgram, "u_secondObj");
+        loc_time = glGetUniformLocation(shaderProgram, "u_time");
 
         texture2D = new OGLTexture2D.Viewer();
         textHelper = new OGLTextRenderer(Main.getWidth(), Main.getHeight());
@@ -102,7 +109,8 @@ public class Renderer extends AbstractRenderer {
         translation = new Mat4Identity();
         scale = new Mat4Identity();
 
-
+        secondObjPos = new Vec3D(5,5,5);
+        secondObjMove = new Mat4Transl(secondObjPos);
     }
 
     @Override
@@ -116,16 +124,20 @@ public class Renderer extends AbstractRenderer {
 
         loc_uSelectedModel = glGetUniformLocation(shaderProgram, "selectedModel");
 
-        //TODO - Vybrání modelů (6x)
+        //TODO - Vybrání modelů (1x)
         glUniform1i(loc_uSelectedModel, selectedModel);
         glUniformMatrix4fv(loc_uProj, false, projection.floatArray());
 
-
-        //TODO - specular spožku
         glUniform1i(loc_lightMode, lightModeValue);
 
         //Model
         glUniformMatrix4fv(loc_uModel, false, ToFloatArray.convert(model));
+
+        //Second OBj
+        glUniform3fv(loc_secondObj, ToFloatArray.convert(secondObjPos));
+
+        time+=0.1;
+        glUniform1f(loc_time, time);
 
 
         //TODO
@@ -341,7 +353,6 @@ public class Renderer extends AbstractRenderer {
                         gridModeList = true;
                         System.out.println("Strip");
                     }
-
                     //Osvětlovací model
                     case GLFW_KEY_L -> {
                         if (lightModeValue == 5 ) {

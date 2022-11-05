@@ -7,7 +7,6 @@ uniform mat4 u_Model;
 
 //TODO
 uniform float type;
-uniform float time;
 out vec3 objectPos;
 out vec3 normalDir;
 
@@ -15,7 +14,6 @@ uniform vec3 eyePos;
 
 
 out vec3 eyeVec;
-
 out vec2 texCoords;
 out vec3 toLightVec;
 out vec3 normalVec;
@@ -27,6 +25,9 @@ const float PI = 3.1415926;
 uniform int selectedModel;
 out vec4 objectPosition;
 
+//TODO secondOBJ
+uniform vec3 u_secondObj;
+uniform float u_time;
 
 
 vec3 getNormal(vec2 vec) {
@@ -41,6 +42,19 @@ vec3 getNormal(vec2 vec) {
 
 
 //OBJEKTY
+/*Kartézské souřadnice
+-
+
+Sférické souřadnice
+- Kulová soustava souřadnic
+- Parametry azimut, zenit, poloměr (R)
+
+Cylindrické souřadnice
+- Válcová soustava souřadnic
+- Parametry azimut, poloměr, výška
+*/
+
+
 // Kartézská souřadnice 1
 vec3 getPlot(vec2 vec) {
     return vec3(vec.x, vec.y, 0.5 * cos(sqrt(20 * vec.x * vec.x + 20 * vec.y * vec.y)));
@@ -75,30 +89,63 @@ vec3 getElephantHand(vec2 vec){
     return vec3(x, y, z);
 }
 //Sombrero - ppt 1-10 -> 71 ; Cylindr. souřadnice 1
-vec3 getSombrero(vec3 vec){
+vec3 getSombrero(vec2 vec){
     float azim = vec.x * 2 * PI;
     float zen = vec.y * 2 * PI;
-    float r = 2 * sin(zen);
+    float v = 2 * sin(zen);
 
     float x = zen * cos(azim);
     float y = zen * sin(azim);
-    float z = r;
+    float z = v;
 
     return vec3(x, y, z); //TODO - nefunguje
 }
+// Kartez 3 - https://christopherchudzicki.github.io/MathBox-Demos/parametric_surfaces_3D.html
+vec3 getCylinder(vec2 vec){
+    float azim = vec.x * PI * 2.;
+    float zen = vec.y * PI - PI / 2.;
+
+    float x = 3 * cos(azim);//u
+    float y = 3 * sin(azim);//u
+    float z = zen; //v
+
+    return vec3(x,y,z);
+}
+// Sférické souř. 2 - https://www.wolframalprha.com/input/?i=3D+spherical+plot+%283+++cos%5B8%%CF%95%8E%F9%2C+%7B%CE%B8%2C+0%2C+Pi%7D%2C+%7B%CF%95%2C+0%2C+2Pi%7D
+vec3 getSphere(vec2 vec) {
+    float azim = vec.x * PI;
+    float zen = vec.y * PI ;
+    float r = 1.;
+
+    float x = r * cos(azim) * cos(zen);
+    float y =  r * sin(azim) * cos(zen);
+    float z =  r * sin(zen);
+
+    return vec3(x, y, z);
+}
+
+//Cylinder 2 -
+//TODO
+
+vec3 getXXX(vec2 vec){
+    float x = vec.x * cos(vec.y);
+    float y = vec.x * sin(vec.y);
+    float v = sqrt( (vec.x * vec.x) + (vec.y * vec.y));
+
+    return vec3(x,y,v);
+}
+
+
+
 /*
-vec3 getSombrero2(vec3 vec){
-    //float azimut = ;
-    //float r = ;
-    float v = 2 * sin(r);
+Ripple
+sin(10(x^2+y^2))/10
 
-    float x = r * cos(azimut);
-    float y = r* sin(azimut);
-    float z = z;
+Pyramid
+1-abs(x+y)-abs(y-x)
+*/
 
 
-    return(x,y,z);
-}*/
 
 
 //CV7
@@ -132,19 +179,19 @@ void main() {
     }
     else if (selectedModel == 3){
         normal = getNormal(position);
-        //finalPos = getSombrero(position);
+        finalPos = getSombrero(position);
     }
     else if (selectedModel == 4){
         normal = getNormal(position);
-        //finalPos = getXXX(position);
+        finalPos = getCylinder(position);
     }
     else if (selectedModel == 5){
         normal = getNormal(position);
-        //finalPos = getXXX(position);
+        finalPos = getSphere(position);
     }
     else if (selectedModel == 6){
         normal = getNormal(position);
-        //finalPos = getXXX(position);
+        finalPos = getXXX(position);
     }
 
 
