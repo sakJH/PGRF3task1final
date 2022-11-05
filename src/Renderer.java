@@ -6,7 +6,6 @@ import org.lwjgl.glfw.GLFWMouseButtonCallback;
 import org.lwjgl.glfw.GLFWScrollCallback;
 import transforms.*;
 
-import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.nio.DoubleBuffer;
 
@@ -18,7 +17,9 @@ public class Renderer extends AbstractRenderer {
     private int shaderProgram;
     private Camera camera;
     private Mat4 projection;
-    private OGLTexture2D texture;
+    private OGLTexture2D textureBase;
+    private OGLTexture2D textureNormal;
+
     private boolean mouseButton1, mouseButton2, mouseButton3;
     private double ox, oy;
 
@@ -86,8 +87,10 @@ public class Renderer extends AbstractRenderer {
         textHelper = new OGLTextRenderer(Main.getWidth(), Main.getHeight());
 
         try {
-            texture = new OGLTexture2D("./textures/bricks.jpg");
-        } catch (IOException e) {
+            textureBase = new OGLTexture2D("./textures/bricks.jpg");
+            textureNormal = new OGLTexture2D("./textures/bricksn.png");
+        }
+        catch (IOException e) {
             throw new RuntimeException(e);
         }
 
@@ -105,7 +108,8 @@ public class Renderer extends AbstractRenderer {
         loc_uView = glGetUniformLocation(shaderProgram, "u_View");
         glUniformMatrix4fv(loc_uView, false, camera.getViewMatrix().floatArray());
 
-        texture.bind();
+        textureBase.bind(shaderProgram, "textureBase", 0);
+        textureBase.bind(shaderProgram, "textureNormal", 1);
 
         loc_uSelectedModel = glGetUniformLocation(shaderProgram, "selectedModel");
 

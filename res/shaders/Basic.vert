@@ -88,8 +88,8 @@ vec3 getSombrero(vec3 vec){
 }
 
 vec3 getSombrero2(vec3 vec){
-    float azimut = ;
-    float r = ;
+    //float azimut = ;
+    //float r = ;
     float v = 2 * sin(r);
 
     float x = r * cos(azimut);
@@ -99,6 +99,14 @@ vec3 getSombrero2(vec3 vec){
 
     return(x,y,z);
 }
+
+
+//CV7
+vec3 getTangent() {
+    // TODO: implementovat
+    return vec3(0);
+}
+
 
 
 void main() {
@@ -138,6 +146,18 @@ void main() {
         normal = getNormal(position);
         //finalPos = getXXX(position);
     }
+
+
+    //CV7 ---
+    vec3 tangent = mat3(u_View) * getTangent();
+    vec3 bitangent = cross(normalize(normalVector), normalize(tangent));
+
+    // TODO: Vytvořit TBN matici
+    mat3 tbn = mat3(1);
+
+    // TODO: Aplikovat TBN na vektory, které se používají pro výpočet osvětlení
+
+    //--- CV7
 
 
     // Phong

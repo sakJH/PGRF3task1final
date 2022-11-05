@@ -1,13 +1,18 @@
 #version 330
 in vec2 texCoords;
 in vec3 toLightVector;
-in vec3 normalVector;
+//CV7
+//in vec3 normalVector;
 
 in vec3 normal;
 
 uniform float u_ColorR;
 
-uniform sampler2D textureBricks;
+//CV7
+//uniform sampler2D textureBricks;
+uniform sampler2D textureBase;
+uniform sampler2D textureNormal;
+
 
 out vec4 outColor;
 
@@ -17,8 +22,6 @@ vec4 ambientColor = vec4(0.9, 0.1, 0.1, 0.1);
 vec4 diffuseColor = vec4(0.9, 0.9, 0.9, 0.1);
 
 void main() {
-
-    vec4 baseColor = texture(textureBricks, texCoords);
 
     // Diffuse
     vec3 ld = normalize(toLightVector);
@@ -52,3 +55,42 @@ void main() {
 
     //outColor = (ambient + diffuse + specular) * baseColor;
 }
+
+
+//CV7
+/*
+#version 330
+in vec2 texCoords;
+in vec3 toLightVector;
+
+uniform float u_ColorR;
+
+uniform sampler2D textureBase;
+uniform sampler2D textureNormal;
+
+out vec4 outColor;
+
+vec4 ambientColor = vec4(0.9, 0.1, 0.1, 1.);
+vec4 diffuseColor = vec4(0.9, 0.9, 0.9, 1.);
+
+void main() {
+    vec4 baseColor = texture(textureBase, texCoords);
+
+    vec4 textureColor = texture(textureNormal, texCoords);
+    // Tangent space
+    vec3 normal = textureColor.rgb * 2.f - 1.f;
+
+    // Diffuse
+    vec3 ld = normalize(toLightVector);
+    vec3 nd = normalize(normal);
+    float NDotL = max(dot(nd, ld), 0.);
+
+    vec4 ambient = ambientColor;
+    vec4 diffuse = NDotL * diffuseColor;
+    vec4 specular = vec4(0);
+
+    //outColor = (ambient + diffuse + specular) * baseColor;
+    outColor = baseColor;
+}
+
+*/
