@@ -30,6 +30,11 @@ public class Renderer extends AbstractRenderer {
     int loc_uColorR, loc_uProj, loc_uView, loc_uSelectedModel, loc_lightMode, loc_uModel;
 
     private OGLBuffers buffers;
+
+    //Pro funkci
+    private OGLBuffers buffer;
+    private boolean gridModeList = true;
+
     int lightModeValue = 0;
 
     private OGLTexture2D.Viewer texture2D;
@@ -53,8 +58,6 @@ public class Renderer extends AbstractRenderer {
         glEnable(GL_DEPTH_TEST);
 
         buffers = Grid.gridListTriangle(gridM, gridN);
-        //buffers = Grid.gridStripsTriangle(20,20);
-
 
         camera = new Camera()
                 .withPosition(new Vec3D(0.f, 0f, 0f))
@@ -130,7 +133,9 @@ public class Renderer extends AbstractRenderer {
 
         //textHelper.addStr2D(5, 15, "Task 1");
 
-        buffers.draw(GL_TRIANGLES, shaderProgram);
+
+        //buffers.draw(GL_TRIANGLES, shaderProgram);
+        buffersMode(buffers);
     }
 
     private GLFWCursorPosCallback cpCallbacknew = new GLFWCursorPosCallback() {
@@ -327,13 +332,14 @@ public class Renderer extends AbstractRenderer {
 
                     //List / Strip
                     case GLFW_KEY_I -> {
-                        buffers = Grid.gridListTriangle(gridM, gridM);
-                        buffers.draw(GL_TRIANGLES, shaderProgram);
-                    }
-                    //TODO -> Problém - zůstává GL_TRIANGLES (asi)
-                    case GLFW_KEY_U -> {
                         buffers = Grid.gridStripsTriangle(gridM, gridN);
-                        buffers.draw(GL_TRIANGLE_STRIP, shaderProgram);
+                        gridModeList = false;
+                        System.out.println("List");
+                    }
+                    case GLFW_KEY_U -> {
+                        buffers = Grid.gridListTriangle(gridM, gridN);
+                        gridModeList = true;
+                        System.out.println("Strip");
                     }
 
                     //Osvětlovací model
@@ -382,6 +388,14 @@ public class Renderer extends AbstractRenderer {
             return;
         }
         projection = new Mat4PerspRH(Math.PI / 3, Main.getHeight() / (float) Main.getWidth(), 0.01f, 50.f);
+    }
+
+    private void buffersMode(OGLBuffers buffers) {
+        if (gridModeList) {
+            buffers.draw(GL_TRIANGLES, shaderProgram);
+        } else {
+            buffers.draw(GL_TRIANGLE_STRIP, shaderProgram);
+        }
     }
 }
 
