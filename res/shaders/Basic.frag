@@ -1,10 +1,11 @@
 #version 330
 in vec2 texCoords;
-in vec3 toLightVector;
+in vec3 toLightVec;
 //CV7
-//in vec3 normalVector;
+in vec3 normalVec;
 
 in vec3 normal;
+in vec3 eyeVec;
 
 uniform float u_ColorR;
 
@@ -18,24 +19,29 @@ out vec4 outColor;
 
 uniform int lightMode;
 
-vec4 ambientColor = vec4(0.9, 0.1, 0.1, 0.1);
-vec4 diffuseColor = vec4(0.9, 0.9, 0.9, 0.1);
+vec4 ambientColor = vec4(0.3, 0.3, 0.3, 1);
+vec4 diffuseColor = vec4(0.5, 0.5, 0.2, 1);
+vec4 specularColor = vec4(0.5, 0.5, 0.2, 1);
 
 void main() {
+    vec4 baseColor = texture(textureBase, texCoords);
 
     // Diffuse
-    vec3 ld = normalize(toLightVector);
-    vec3 nd = normalize(normalVector);
+    vec3 ld = normalize(toLightVec);
+    vec3 nd = normalize(normalVec);
+    vec3 vd = normalize(eyeVec);
+
     float NDotL = max(dot(nd, ld), 0.);
 
-    vec4 ambient = ambientColor;
-    vec4 diffuse = NDotL * diffuseColor;
-    vec4 specular = vec4(0);
+    vec3 halfVec = normalize(ld + vd);
 
-    /*float NdotH = dot(normalize(normalIO), halfVector);
-    vec4 specular = vec4(pow(NdotH, 16) * vec3(1.0), 1);
-    totalSpecular = specular * ( pow( NDotH, specularPower*4.0 ) );*/
+    float NDotH = pow(max(0, dot(nd, halfVec)), 15.);
 
+    vec4 ambient = ambientColor.rgba;
+    vec4 diffuse = NDotL * diffuseColor.rgba;
+    vec4 specular = NDotH * specularColor.rgba;
+
+    vec3 reflection = normalize( ( ( 2.0 * nd ) * NDotL ) - ld );
 
     if (lightMode == 0) {
         outColor = (ambient + diffuse + specular) * baseColor;
@@ -51,6 +57,14 @@ void main() {
     } else if (lightMode == 3) {
         // zrcadlova složka
         outColor = specular + baseColor;
+
+    } else if (lightMode == 4) {
+        // zrcadlova složka
+        outColor = baseColor;
+
+    } else if (lightMode == 5) {
+        // zrcadlova složka
+        outColor = (ambient + diffuse + specular);
     }
 
     //outColor = (ambient + diffuse + specular) * baseColor;

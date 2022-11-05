@@ -10,15 +10,15 @@ uniform float type;
 uniform float time;
 out vec3 objectPos;
 out vec3 normalDir;
-out vec3 eyeVec;
+
 uniform vec3 eyePos;
 
 
-
+out vec3 eyeVec;
 
 out vec2 texCoords;
-out vec3 toLightVector;
-out vec3 normalVector;
+out vec3 toLightVec;
+out vec3 normalVec;
 
 vec3 lightSoure = vec3(0.5, 0.5, 0.1);
 
@@ -80,13 +80,13 @@ vec3 getSombrero(vec3 vec){
     float zen = vec.y * 2 * PI;
     float r = 2 * sin(zen);
 
-    float x = zen * cos(azi);
-    float y = zen * sin(azi);
+    float x = zen * cos(azim);
+    float y = zen * sin(azim);
     float z = r;
 
     return vec3(x, y, z); //TODO - nefunguje
 }
-
+/*
 vec3 getSombrero2(vec3 vec){
     //float azimut = ;
     //float r = ;
@@ -98,7 +98,7 @@ vec3 getSombrero2(vec3 vec){
 
 
     return(x,y,z);
-}
+}*/
 
 
 //CV7
@@ -150,7 +150,7 @@ void main() {
 
     //CV7 ---
     vec3 tangent = mat3(u_View) * getTangent();
-    vec3 bitangent = cross(normalize(normalVector), normalize(tangent));
+    vec3 bitangent = cross(normalize(normalVec), normalize(tangent));
 
     // TODO: Vytvořit TBN matici
     mat3 tbn = mat3(1);
@@ -162,7 +162,7 @@ void main() {
 
     // Phong
     vec4 lightPosition = u_View * vec4(lightSoure, 1.);
-    toLightVector = lightPosition.xyz - objectPosition.xyz;
+    toLightVec = lightPosition.xyz - objectPosition.xyz;
     //normalVector = transpose(inverse(mat3(u_View))) * getNormal();
 
     vec2 a = vec2(float (2));

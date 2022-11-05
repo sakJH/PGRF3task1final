@@ -69,7 +69,7 @@ public class Renderer extends AbstractRenderer {
         shaderProgram = ShaderUtils.loadProgram("/shaders/Basic");
         glUseProgram(shaderProgram);
 
-        // Color
+        // Color - Černevá barba
         loc_uColorR = glGetUniformLocation(shaderProgram, "u_ColorR");
         glUniform1f(loc_uColorR, 1.f);
 
@@ -338,7 +338,7 @@ public class Renderer extends AbstractRenderer {
 
                     //Osvětlovací model
                     case GLFW_KEY_L -> {
-                        if (lightModeValue == 3 ) {
+                        if (lightModeValue == 5 ) {
                             lightModeValue = 0; System.out.println("L " + lightModeValue);}
                         else {
                             lightModeValue++; System.out.println("L " + lightModeValue);}
