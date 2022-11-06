@@ -55,6 +55,7 @@ public class Renderer extends AbstractRenderer {
     //Second Object
     private Mat4 secondObjMove;
     private Vec3D secondObjPos;
+    private int secondObjModel = 0;
 
     @Override
     public void init() {
@@ -134,8 +135,10 @@ public class Renderer extends AbstractRenderer {
         glUniformMatrix4fv(loc_uModel, false, ToFloatArray.convert(model));
 
         //Second OBj
-        glUniform3fv(loc_secondObj, ToFloatArray.convert(secondObjPos));
+        //glUniformMatrix4fv(loc_uModel, false, ToFloatArray.convert(secondObjMove));
 
+
+        //Time
         time+=0.1;
         glUniform1f(loc_time, time);
 
@@ -331,7 +334,6 @@ public class Renderer extends AbstractRenderer {
                         projection = new Mat4OrthoRH(2.3, 2.3, 0.1, 20);
                         System.out.println("O");
                     }
-
                     //Scale
                     case GLFW_KEY_Z -> {
                         projection = projection.mul(new Mat4Scale(0.9,0.9,0.9));
@@ -355,7 +357,7 @@ public class Renderer extends AbstractRenderer {
                     }
                     //Osvětlovací model
                     case GLFW_KEY_L -> {
-                        if (lightModeValue == 5 ) {
+                        if (lightModeValue == 6 ) {
                             lightModeValue = 0; System.out.println("L " + lightModeValue);}
                         else {
                             lightModeValue++; System.out.println("L " + lightModeValue);}

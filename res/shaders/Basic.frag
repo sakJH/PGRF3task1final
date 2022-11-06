@@ -23,6 +23,11 @@ vec4 ambientColor = vec4(0.3, 0.3, 0.3, 1);
 vec4 diffuseColor = vec4(0.5, 0.5, 0.2, 1);
 vec4 specularColor = vec4(0.5, 0.5, 0.2, 1);
 
+//secondObj
+in vec3 seconObjDir;
+in float seconObjDis;
+uniform vec3 u_secondObj;
+
 void main() {
     vec4 baseColor = texture(textureBase, texCoords);
 
@@ -43,6 +48,15 @@ void main() {
 
     vec3 reflection = normalize( ( ( 2.0 * nd ) * NDotL ) - ld );
 
+    //Útlum prostředí
+    float constantAttenuation, linearAttenuation, quadraticAttenuation, att;
+
+    constantAttenuation = 1.0;
+    linearAttenuation = 0.3;
+    quadraticAttenuation = 0.01;
+
+    att = 1.0 / (constantAttenuation + linearAttenuation * seconObjDis + quadraticAttenuation * seconObjDis * seconObjDis);
+
     if (lightMode == 0) {
         outColor = (ambient + diffuse + specular) * baseColor;
 
@@ -56,7 +70,7 @@ void main() {
 
     } else if (lightMode == 3) {
         // zrcadlova složka
-        outColor = specular + baseColor;
+        outColor = specular * baseColor;
 
     } else if (lightMode == 4) {
         // zrcadlova složka
@@ -65,9 +79,13 @@ void main() {
     } else if (lightMode == 5) {
         // zrcadlova složka
         outColor = (ambient + diffuse + specular);
+    } else if (lightMode == 6) {
+        // zrcadlova složka
+        outColor = (ambient + att * (diffuse + specular)) * baseColor;
     }
 
-    //outColor = (ambient + diffuse + specular) * baseColor;
+
+    gl_FragDepth;
 }
 
 

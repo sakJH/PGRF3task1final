@@ -28,6 +28,8 @@ out vec4 objectPosition;
 //TODO secondOBJ
 uniform vec3 u_secondObj;
 uniform float u_time;
+out vec3 secondObjDir;
+out float secondObjDis;
 
 
 vec3 getNormal(vec2 vec) {
@@ -166,7 +168,7 @@ void main() {
 
     //Výber těles
     if (selectedModel == 0 ){
-        normal = getNormal(position);
+        //normal = getNormal(position);
         finalPos = getPlot(position);
     }
     else if (selectedModel == 1){
@@ -203,7 +205,6 @@ void main() {
     mat3 tbn = mat3(1);
 
     // TODO: Aplikovat TBN na vektory, které se používají pro výpočet osvětlení
-
     //--- CV7
 
 
@@ -219,7 +220,12 @@ void main() {
 
     vec4 finalPos4 = u_Model * vec4(finalPos,1.0);
 
+    //secondObj
+    secondObjDir = normalize(u_secondObj - finalPos4.xyz);
+
     eyeVec = normalize(eyePos - finalPos4.xyz);
+
+    secondObjDis = length(u_secondObj - finalPos4.xyz);
 
     vec4 pos4 = vec4(finalPos, 1.0);
     //kamera -> NDC souřadnic
