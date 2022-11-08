@@ -24,7 +24,7 @@ public class Renderer extends AbstractRenderer {
     private double ox, oy;
 
     double camSpeed = 0.25;
-    float time = 0;
+    float timeChange = 0;
     private Main main;
 
     int loc_uColorR, loc_uProj, loc_uView, loc_uSelectedModel, loc_lightMode, loc_uModel, loc_secondObj, loc_time;
@@ -56,6 +56,7 @@ public class Renderer extends AbstractRenderer {
     private Mat4 secondObjMove;
     private Vec3D secondObjPos;
     private int secondObjModel = 0;
+    private float secondObjPosX; private float secondObjPosY;
 
     @Override
     public void init() {
@@ -125,7 +126,6 @@ public class Renderer extends AbstractRenderer {
 
         loc_uSelectedModel = glGetUniformLocation(shaderProgram, "selectedModel");
 
-        //TODO - Vybrání modelů (1x)
         glUniform1i(loc_uSelectedModel, selectedModel);
         glUniformMatrix4fv(loc_uProj, false, projection.floatArray());
 
@@ -134,23 +134,33 @@ public class Renderer extends AbstractRenderer {
         //Model
         glUniformMatrix4fv(loc_uModel, false, ToFloatArray.convert(model));
 
+        //Vykreslení pro modely
+        buffersMode(buffers);
+
         //Second OBj
         //glUniformMatrix4fv(loc_uModel, false, ToFloatArray.convert(secondObjMove));
 
 
         //Time
-        time+=0.1;
-        glUniform1f(loc_time, time);
+        timeChange += 0.01;
+        glUniform1f(loc_time, timeChange);
 
+        //Animace
+        secondObjPosX = (float) (Math.sin(timeChange));
+        secondObjPosY = (float) (Math.cos(timeChange));
+        secondObjPos = new Vec3D(secondObjPosX, secondObjPosY, 1);
 
-        //TODO
-        //texture2D.view();
+        secondObjMove = new Mat4Transl(secondObjPos);
 
-        //textHelper.addStr2D(5, 15, "Task 1");
+        glUniform1f(loc_uSelectedModel, 7);
+        glUniform1f(loc_lightMode, 7);
 
+        glUniformMatrix4fv(loc_uModel, false, ToFloatArray.convert(secondObjMove));
+        //Vykreslení pro secondObject
+        buffersMode(buffers);
 
         //buffers.draw(GL_TRIANGLES, shaderProgram);
-        buffersMode(buffers);
+        //buffersMode(buffers);
     }
 
     private GLFWCursorPosCallback cpCallbacknew = new GLFWCursorPosCallback() {
@@ -357,14 +367,14 @@ public class Renderer extends AbstractRenderer {
                     }
                     //Osvětlovací model
                     case GLFW_KEY_L -> {
-                        if (lightModeValue == 6 ) {
+                        if (lightModeValue == 7 ) {
                             lightModeValue = 0; System.out.println("L " + lightModeValue);}
                         else {
                             lightModeValue++; System.out.println("L " + lightModeValue);}
                     }
                     //Objekty
                     case GLFW_KEY_M -> {
-                        if (selectedModel >= 6) {selectedModel = 0 ;}
+                        if (selectedModel >= 7) {selectedModel = 0 ;}
                         selectedModel++;
 
                         System.out.println("Object " + selectedModel);

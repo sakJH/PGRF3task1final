@@ -126,15 +126,18 @@ vec3 getSphere(vec2 vec) {
     return vec3(x, y, z);
 }
 
-//Cylinder 2 -
-//TODO
+//Cosi jaksi https://reference.wolfram.com/language/ref/SphericalPlot3D.html  Sphere
+//Cylinder
+vec3 getUnknown(vec2 vec) {
+    float azim = 1 + 2 * cos(2 * vec.y);
+    float zen = vec.x + vec.y * PI;
+    float r = PI + vec.x;
 
-vec3 getXXX(vec2 vec){
-    float x = vec.x * cos(vec.y);
-    float y = vec.x * sin(vec.y);
-    float v = sqrt( (vec.x * vec.x) + (vec.y * vec.y));
+    float x = zen * cos(azim);
+    float y = zen * sin(azim);
+    float z = r * sin(zen);
 
-    return vec3(x,y,v);
+    return vec3(x, y, z);
 }
 
 
@@ -147,7 +150,35 @@ Pyramid
 1-abs(x+y)-abs(y-x)
 */
 
+// Přepočty na souřadicové systémy
+vec3 transKartezToSferic(vec3 vec){
 
+    float r = sqrt( (vec.x * vec.x) + (vec.y * vec.y) + (vec.z * vec.z));
+    float azim = atan(vec.y,vec.z);
+    float zen = acos(vec.z/r);
+
+    return vec3(r,azim,zen);
+}
+
+vec3 transKartezToCylinder(vec3 vec){
+
+    float r = sqrt( (vec.x * vec.x) + (vec.y * vec.y));
+    float azim = atan(vec.y,vec.z);
+    float zen = vec.z;
+
+    return vec3(r,azim,zen);
+}
+
+vec3 getSecondSphere(vec2 vec){
+    float azim = vec.x * PI;
+    float zem = vec.y * PI / 2.0;
+    float r = 0.1;
+
+    float x = r * cos(azim) * cos(zem);
+    float y =  r * sin(azim) * cos(zem);
+    float z =  r * sin(zem);
+    return vec3(x, y, z);
+}
 
 
 //CV7
@@ -193,7 +224,12 @@ void main() {
     }
     else if (selectedModel == 6){
         normal = getNormal(position);
-        finalPos = getXXX(position);
+        finalPos = getUnknown(position);
+    }
+    else if (selectedModel == 7){
+        //Second OBj
+        normal = getNormal(position);
+        finalPos = getSecondSphere(position);
     }
 
 
@@ -218,13 +254,11 @@ void main() {
     objectPos = finalPos;
     normalDir = inverse(transpose(mat3(u_Model))) * normal;
 
-    vec4 finalPos4 = u_Model * vec4(finalPos,1.0);
+    vec4 finalPos4 = u_Model * vec4(finalPos, 1.0);
 
     //secondObj
     secondObjDir = normalize(u_secondObj - finalPos4.xyz);
-
     eyeVec = normalize(eyePos - finalPos4.xyz);
-
     secondObjDis = length(u_secondObj - finalPos4.xyz);
 
     vec4 pos4 = vec4(finalPos, 1.0);
