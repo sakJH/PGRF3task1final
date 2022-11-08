@@ -45,7 +45,7 @@ void main() {
     vec4 diffuse = NDotL * diffuseColor.rgba;
     vec4 specular = NDotH * specularColor.rgba;
 
-    vec3 reflection = normalize( ( ( 2.0 * nd ) * NDotL ) - ld );
+    vec3 reflection = normalize(((2.0 * nd) * NDotL) - ld);
 
     //Útlum prostředí
     float constantAttenuation, linearAttenuation, quadraticAttenuation, att;
@@ -59,23 +59,23 @@ void main() {
     //Módy osvětlení
     if (lightMode == 0) {
         outColor = (ambient + diffuse + specular) * baseColor;
-
     } else if (lightMode == 1) {
-        //ambientni složka
+        //ambientni složka + textura
         outColor = ambient * baseColor;
     } else if (lightMode == 2) {
-        // difuzni složka
+        // difuzni složka + textura
         outColor = diffuse * baseColor;
     } else if (lightMode == 3) {
-        // zrcadlova složka
+        // zrcadlova složka + textura
         outColor = specular * baseColor;
     } else if (lightMode == 4) {
+        //bez osvětlovacího modelu
         outColor = baseColor;
     } else if (lightMode == 5) {
-        // zrcadlova složka
+        // všechny složky bez textura
         outColor = (ambient + diffuse + specular);
     } else if (lightMode == 6) {
-        // zrcadlova složka
+        // Útlum složka
         //outColor = (ambient + att * (diffuse + specular)) * baseColor;
         outColor = ambient + att * (diffuse + specular);
     } else if (lightMode == 7) {

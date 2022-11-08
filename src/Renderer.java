@@ -20,27 +20,20 @@ public class Renderer extends AbstractRenderer {
     private Mat4 projection;
     private OGLTexture2D textureBase;
     private OGLTexture2D textureNormal;
-
     private boolean mouseButton1, mouseButton2, mouseButton3;
     private double ox, oy;
-
     double camSpeed = 0.25;
     float timeChange = 0;
     private Main main;
-
     int loc_uColorR, loc_uProj, loc_uView, loc_uSelectedModel, loc_lightMode, loc_uModel, loc_secondObj, loc_time;
-
     private OGLBuffers buffers;
 
     //Pro funkci
     private OGLBuffers buffer;
     private boolean gridModeList = true;
-
     int lightModeValue = 0;
-
     private OGLTexture2D.Viewer texture2D;
     private OGLTextRenderer textHelper;
-
     private int selectedModel = 0;
 
     private int gridM = 20; private int gridN = 20;
@@ -64,7 +57,6 @@ public class Renderer extends AbstractRenderer {
 
     //Cv8 - Post processing
     private OGLRenderTarget renderTarget;
-
     private Grid gridPost;
 
     @Override
@@ -77,12 +69,11 @@ public class Renderer extends AbstractRenderer {
         camera = new Camera()
                 .withPosition(new Vec3D(0.f, 0f, 0f))
                 .withAzimuth(Math.PI * 1.25)
-                .withZenith(Math.PI * -0.125)
+                .withZenith(Math.PI * - 0.125)
                 .withFirstPerson(false)
                 .withRadius(3);
+
         projection = new Mat4PerspRH(Math.PI / 3, Main.getHeight() / (float) Main.getWidth(), 0.1f, 50.f);
-
-
 
         shaderProgram = ShaderUtils.loadProgram("/shaders/Basic");
         glUseProgram(shaderProgram);
