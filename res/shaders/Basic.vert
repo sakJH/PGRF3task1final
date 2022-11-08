@@ -25,6 +25,8 @@ const float PI = 3.1415926;
 uniform int selectedModel;
 out vec4 objectPosition;
 
+out float dist;
+
 //TODO secondOBJ
 uniform vec3 u_secondObj;
 uniform float u_time;
@@ -172,7 +174,7 @@ vec3 transKartezToCylinder(vec3 vec){
 vec3 getSecondSphere(vec2 vec){
     float azim = vec.x * PI;
     float zem = vec.y * PI / 2.0;
-    float r = 0.1;
+    float r = 0.5;
 
     float x = r * cos(azim) * cos(zem);
     float y =  r * sin(azim) * cos(zem);
@@ -244,7 +246,7 @@ void main() {
     //--- CV7
 
 
-    // Phong
+    // Osvětlovací model
     vec4 lightPosition = u_View * vec4(lightSoure, 1.);
     toLightVec = lightPosition.xyz - objectPosition.xyz;
     //normalVector = transpose(inverse(mat3(u_View))) * getNormal();
@@ -255,6 +257,8 @@ void main() {
     normalDir = inverse(transpose(mat3(u_Model))) * normal;
 
     vec4 finalPos4 = u_Model * vec4(finalPos, 1.0);
+
+    dist = length(lightPosition);
 
     //secondObj
     secondObjDir = normalize(u_secondObj - finalPos4.xyz);

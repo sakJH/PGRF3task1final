@@ -15,6 +15,7 @@ import static org.lwjgl.opengl.GL33.*;
 
 public class Renderer extends AbstractRenderer {
     private int shaderProgram;
+    private int shaderProgramPost;
     private Camera camera;
     private Mat4 projection;
     private OGLTexture2D textureBase;
@@ -52,11 +53,19 @@ public class Renderer extends AbstractRenderer {
 
     private int button;
 
+    //texture setting
+    private boolean texturePNG = false;
+
     //Second Object
     private Mat4 secondObjMove;
     private Vec3D secondObjPos;
     private int secondObjModel = 0;
     private float secondObjPosX; private float secondObjPosY;
+
+    //Cv8 - Post processing
+    private OGLRenderTarget renderTarget;
+
+    private Grid gridPost;
 
     @Override
     public void init() {
@@ -77,6 +86,9 @@ public class Renderer extends AbstractRenderer {
 
         shaderProgram = ShaderUtils.loadProgram("/shaders/Basic");
         glUseProgram(shaderProgram);
+
+        shaderProgramPost = ShaderUtils.loadProgram("/shaders/Post");
+        glUseProgram(shaderProgramPost);
 
         // Color - Černevá barba
         loc_uColorR = glGetUniformLocation(shaderProgram, "u_ColorR");
@@ -113,6 +125,10 @@ public class Renderer extends AbstractRenderer {
 
         secondObjPos = new Vec3D(5,5,5);
         secondObjMove = new Mat4Transl(secondObjPos);
+
+        //Cv8
+        gridPost = new Grid(20, 20);
+        //renderTarget = new OGLRenderTarget(width, height);
     }
 
     @Override
@@ -137,10 +153,6 @@ public class Renderer extends AbstractRenderer {
         //Vykreslení pro modely
         buffersMode(buffers);
 
-        //Second OBj
-        //glUniformMatrix4fv(loc_uModel, false, ToFloatArray.convert(secondObjMove));
-
-
         //Time
         timeChange += 0.01;
         glUniform1f(loc_time, timeChange);
@@ -159,9 +171,31 @@ public class Renderer extends AbstractRenderer {
         //Vykreslení pro secondObject
         buffersMode(buffers);
 
-        //buffers.draw(GL_TRIANGLES, shaderProgram);
-        //buffersMode(buffers);
+        //renderMain();
+        //renderPost();
     }
+
+    //Cv8
+    private void renderMain(){
+        glUseProgram(shaderProgram);
+        //renderTarget.bind();
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    }
+
+    private void renderPost(){
+        glUseProgram(shaderProgramPost);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        //Načíst texturu z renderTarget
+        //renderTarget.getColorTexture().bind(shaderProgramPost, "textureBase",0);
+        buffersMode(buffers);
+    }
+
 
     private GLFWCursorPosCallback cpCallbacknew = new GLFWCursorPosCallback() {
         @Override
@@ -376,7 +410,6 @@ public class Renderer extends AbstractRenderer {
                     case GLFW_KEY_M -> {
                         if (selectedModel >= 7) {selectedModel = 0 ;}
                         selectedModel++;
-
                         System.out.println("Object " + selectedModel);
                     }
                 }
@@ -418,6 +451,14 @@ public class Renderer extends AbstractRenderer {
             buffers.draw(GL_TRIANGLES, shaderProgram);
         } else {
             buffers.draw(GL_TRIANGLE_STRIP, shaderProgram);
+        }
+    }
+
+    private void textureMode(){
+        if (!texturePNG) {
+            textureBase.bind(shaderProgram, "textureBase", 0);
+        } else {
+            textureNormal.bind(shaderProgram, "textureNormal", 0);
         }
     }
 }
