@@ -32,6 +32,7 @@ uniform vec3 u_secondObj;
 uniform float spotCutOff;
 uniform vec3 spotCutOffDir;
 
+
 void main() {
     vec4 baseColor = texture(textureBase, texCoords);
 
@@ -66,39 +67,8 @@ void main() {
 
     float blend = clamp((spotEffect - spotCutOff) / (1 - spotCutOff), 0., 1.);
 
-    //Módy osvětlení
-    if (lightMode == 0) {
-        outColor = (ambient + diffuse + specular) * baseColor;
-    } else if (lightMode == 1) {
-        //ambientni složka + textura
-        outColor = ambient * baseColor;
-    } else if (lightMode == 2) {
-        // difuzni složka + textura
-        outColor = diffuse * baseColor;
-    } else if (lightMode == 3) {
-        // zrcadlova složka + textura
-        outColor = specular * baseColor;
-    } else if (lightMode == 4) {
-        //bez osvětlovacího modelu
-        outColor = baseColor;
-    } else if (lightMode == 5) {
-        // všechny složky bez textura
-        outColor = (ambient + diffuse + specular);
-    } else if (lightMode == 6) {
-        // Útlum složka
-        //outColor = (ambient + att * (diffuse + specular)) * baseColor;
-        outColor = (ambient + att * (diffuse + specular) ) * baseColor;
-    } else if (lightMode == 7) {
-        //TODO Second OBj !! ??
 
-    } else if (lightMode == 8) {
-        //spotEffect
-        if(spotEffect > spotCutOff) { outColor = ambient + att * (diffuse + specular); }
-        else { outColor = ambient; }
-    } else if (lightMode == 8) {
-        //Blend
-        outColor = (mix(ambient, ambient + att * (diffuse + specular),blend)) * baseColor;
-    }
+    if(spotEffect > spotCutOff) { outColor = ambient + att * (diffuse + specular); }
+    else { outColor = ambient; }
 
-    //gl_FragDepth;
 }

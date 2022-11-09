@@ -41,21 +41,6 @@ vec3 getNormal(vec2 vec) {
     return cross(dx,dy);
 }
 
-
-//OBJEKTY
-/*Kartézské souřadnice
--
-
-Sférické souřadnice
-- Kulová soustava souřadnic
-- Parametry azimut, zenit, poloměr (R)
-
-Cylindrické souřadnice
-- Válcová soustava souřadnic
-- Parametry azimut, poloměr, výška
-*/
-
-
 // Kartézská souřadnice 1
 vec3 getPlot(vec2 vec) {
     return vec3(vec.x, vec.y, 0.5 * cos(sqrt(20 * vec.x * vec.x + 20 * vec.y * vec.y)));
@@ -106,9 +91,9 @@ vec3 getCylinder(vec2 vec){
     float azim = vec.x * PI * 2.;
     float zen = vec.y * PI - PI / 2.;
 
-    float x = 3 * cos(azim);//u
-    float y = 3 * sin(azim);//u
-    float z = zen; //v
+    float x = 3 * cos(azim);
+    float y = 3 * sin(azim);
+    float z = zen;
 
     return vec3(x,y,z);
 }
@@ -140,15 +125,6 @@ vec3 getUnknown(vec2 vec) {
 }
 
 
-
-/*
-Ripple
-sin(10(x^2+y^2))/10
-
-Pyramid
-1-abs(x+y)-abs(y-x)
-*/
-
 // Přepočty na souřadicové systémy
 vec3 transKartezToSferic(vec3 vec){
 
@@ -167,7 +143,7 @@ vec3 transKartezToCylinder(vec3 vec){
 
     return vec3(r,azim,zen);
 }
-
+/*
 vec3 getSecondSphere(vec2 vec){
     float azim = vec.x * PI;
     float zem = vec.y * PI / 2.0;
@@ -177,6 +153,18 @@ vec3 getSecondSphere(vec2 vec){
     float y =  r * sin(azim) * cos(zem);
     float z =  r * sin(zem);
     return vec3(x, y, z);
+}*/
+
+vec3 getSecondSphere(vec2 vec) {
+    float s = PI * 0.5 - PI * vec.y;
+    float t = 2 * PI * vec.x;
+    float r = 2;
+
+    float x = sin(t) * cos(s) * r;
+    float y = cos(t) * cos(s) * r;
+    float z = sin(s) * r;
+
+    return vec3( x, y, z);
 }
 
 
@@ -185,8 +173,17 @@ vec3 getTangent() {
     // TODO: implementovat
     return vec3(0);
 }
-
-
+/*
+mat3 paramTangent(vec2 vec){
+    float delta = 0.001;
+    vec3 tx = paramPos(vec + vec2(delta, 0)) - paramPos(vec - vec2(delta, 0));
+    vec3 ty = paramPos(vec + vec2(0, delta)) - paramPos(vec - vec2(0, delta));
+    tx = normalize(tx);
+    ty = normalize(ty);
+    vec3 tz = cross(tx,ty);
+    ty = cross(tz,tx);
+    return mat3(tx,ty,tz);
+}*/
 
 void main() {
     texCoords = inPosition;
@@ -231,16 +228,19 @@ void main() {
         finalPos = getSecondSphere(position);
     }
 
+    //Normal Mapping
+    vec3 vNormal, vTangent, vBinormal, tangent;
 
-    //CV7 ---
-    vec3 tangent = mat3(u_View) * getTangent();
-    vec3 bitangent = cross(normalize(normalVec), normalize(tangent));
+    vBinormal = cross(normalize(vNormal), normalize(vTangent));
+    tangent = cross(vBinormal, vNormal);
 
-    // TODO: Vytvořit TBN matici
-    mat3 tbn = mat3(1);
+    vNormal = normalVec * normal;
+    vTangent = mat3(u_Model * u_View) * tangent;
 
-    // TODO: Aplikovat TBN na vektory, které se používají pro výpočet osvětlení
-    //--- CV7
+    vBinormal = cross(normalize(vNormal), normalize(vTangent));
+    vTangent = cross(vBinormal, vNormal);
+
+    mat3 TBN = mat3(vTangent, vBinormal, vNormal);
 
 
     // Osvětlovací model

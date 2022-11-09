@@ -14,7 +14,7 @@ import static org.lwjgl.opengl.GL20.glGetUniformLocation;
 import static org.lwjgl.opengl.GL33.*;
 
 public class Renderer extends AbstractRenderer {
-    private int shaderProgram;
+    private int shaderProgram, shaderProgramPost, shaderSecond;
     private Camera camera;
     private Mat4 projection;
     private OGLTexture2D textureBase;
@@ -54,7 +54,6 @@ public class Renderer extends AbstractRenderer {
     //Cv8 - Post processing
     private OGLRenderTarget renderTarget;
     private Grid gridPost;
-    private int shaderProgramPost;
 
     //Osvětlení reflektorem
     private int loc_spotCutOffDir;
@@ -85,6 +84,10 @@ public class Renderer extends AbstractRenderer {
         shaderProgramPost = ShaderUtils.loadProgram("/shaders/Post");
         glUseProgram(shaderProgramPost);
 
+        //Shader for second object (Anime move, spot light)
+        shaderSecond = ShaderUtils.loadProgram("/shaders/Second");
+        glUseProgram(shaderSecond);
+
         // Color - Černevá barba
         loc_uColorR = glGetUniformLocation(shaderProgram, "u_ColorR");
         glUniform1f(loc_uColorR, 1.f);
@@ -99,17 +102,15 @@ public class Renderer extends AbstractRenderer {
         loc_lightMode = glGetUniformLocation(shaderProgram, "lightMode");
 
         //Second Obj
-        loc_secondObj = glGetUniformLocation(shaderProgram, "u_secondObj");
-        loc_time = glGetUniformLocation(shaderProgram, "u_time");
+        loc_secondObj = glGetUniformLocation(shaderSecond, "u_secondObj");
+        loc_time = glGetUniformLocation(shaderSecond, "u_time");
 
+        //Postprocess
         loc_post = glGetUniformLocation(shaderProgramPost, "u_post");
 
         //Osvětlení reflektorem
         loc_spotCutOffDir = glGetUniformLocation(shaderProgram, "spotCutOffDir");
         spotCutOff = 0.99f;
-
-        texture2D = new OGLTexture2D.Viewer();
-        textHelper = new OGLTextRenderer(Main.getWidth(), Main.getHeight());
 
         try {
             //textureBase = new OGLTexture2D("./textures/bricks.jpg");
@@ -142,7 +143,7 @@ public class Renderer extends AbstractRenderer {
 
     //Cv8
     private void renderMain(){
-        renderTarget.bind();
+        //renderTarget.bind();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(shaderProgram);
@@ -181,10 +182,10 @@ public class Renderer extends AbstractRenderer {
 
         secondObjMove = new Mat4Transl(secondObjPos);
 
-        glUniform1f(loc_uSelectedModel, 7);
-        glUniform1f(loc_lightMode, 7);
+        glUniform1f(loc_secondObj, 0);
+//        glUniform1f(loc_lightMode, 0);
 
-        glUniformMatrix4fv(loc_uModel, false, ToFloatArray.convert(secondObjMove));
+        glUniformMatrix4fv(loc_secondObj, false, ToFloatArray.convert(secondObjMove));
         //Vykreslení pro secondObject
         buffersMode(buffers);
 
@@ -195,15 +196,15 @@ public class Renderer extends AbstractRenderer {
 
         glUseProgram(shaderProgramPost);
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glViewport(0, 0, width, height);
-        renderTarget.getColorTexture().bind(shaderProgramPost, "textureBase", 0);
+//        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//        glViewport(0, 0, width, height);
+        //renderTarget.getColorTexture().bind(shaderProgramPost, "textureBase", 0);
 
-        buffersMode(buffersPost);
+        //buffersMode(buffersPost);
 
-        glUniform1f(loc_post, height);
-        timeChange += 0.01;
-        //glUniform1f(locTimePostProc, timeChange);
+        //glUniform1f(loc_post, height);
+        //timeChange += 0.01;
+        //glUniform1f(locTimePostProc, timeChange);*/
     }
 
 
