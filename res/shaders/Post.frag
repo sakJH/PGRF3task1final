@@ -12,8 +12,8 @@ void main() {
 
     if (gl_FragCoord.y < 100 || gl_FragCoord.y > 250) {
 
-        outColor = baseColor.rbga;
+        outColor = texture(textureBase, texCoords).rbga;
     } else {
-        outColor = baseColor;
+        outColor = texture(textureBase, texCoords).rgba;
     }
 }
