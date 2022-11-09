@@ -68,7 +68,7 @@ void main() {
     // Osvětlovací model
     vec4 lightPosition = u_View * vec4(lightSoure, 1.);
     toLightVec = lightPosition.xyz - objectPosition.xyz;
-    //normalVector = transpose(inverse(mat3(u_View))) * getNormal();
+    normalVector = transpose(inverse(mat3(u_View))) * getNormal();
 
     vec2 a = vec2(float (2));
 
