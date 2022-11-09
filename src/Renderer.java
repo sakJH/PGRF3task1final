@@ -169,7 +169,7 @@ public class Renderer extends AbstractRenderer {
         glUniform1f(loc_spotCutOffDir, spotCutOff);
 
         //Vykreslení pro modely
-        buffersMode(buffers);
+        buffersMode(buffers, shaderProgram);
 
         //Time
         timeChange += 0.01;
@@ -187,7 +187,8 @@ public class Renderer extends AbstractRenderer {
 
         glUniformMatrix4fv(loc_secondObj, false, ToFloatArray.convert(secondObjMove));
         //Vykreslení pro secondObject
-        buffersMode(buffers);
+        buffersMode(buffers, shaderSecond);
+
 
     }
 
@@ -200,7 +201,7 @@ public class Renderer extends AbstractRenderer {
 //        glViewport(0, 0, width, height);
         //renderTarget.getColorTexture().bind(shaderProgramPost, "textureBase", 0);
 
-        //buffersMode(buffersPost);
+        buffersMode(buffersPost, shaderProgramPost);
 
         //glUniform1f(loc_post, height);
         //timeChange += 0.01;
@@ -472,7 +473,7 @@ public class Renderer extends AbstractRenderer {
         projection = new Mat4PerspRH(Math.PI / 3, Main.getHeight() / (float) Main.getWidth(), 0.01f, 50.f);
     }
 
-    private void buffersMode(OGLBuffers buffers) {
+    private void buffersMode(OGLBuffers buffers, int shader) {
         if (gridModeList) {
             buffers.draw(GL_TRIANGLES, shaderProgram);
         } else {
