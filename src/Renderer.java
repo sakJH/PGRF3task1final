@@ -15,7 +15,6 @@ import static org.lwjgl.opengl.GL33.*;
 
 public class Renderer extends AbstractRenderer {
     private int shaderProgram;
-    private int shaderProgramPost;
     private Camera camera;
     private Mat4 projection;
     private OGLTexture2D textureBase;
@@ -25,8 +24,8 @@ public class Renderer extends AbstractRenderer {
     double camSpeed = 0.25;
     float timeChange = 0;
     private Main main;
-    int loc_uColorR, loc_uProj, loc_uView, loc_uSelectedModel, loc_lightMode, loc_uModel, loc_secondObj, loc_time;
-    private OGLBuffers buffers;
+    int loc_uColorR, loc_uProj, loc_uView, loc_uSelectedModel, loc_lightMode, loc_uModel, loc_secondObj, loc_time, loc_post;
+    private OGLBuffers buffers, buffersPost;
 
     //Pro funkci
     private OGLBuffers buffer;
@@ -36,7 +35,7 @@ public class Renderer extends AbstractRenderer {
     private OGLTextRenderer textHelper;
     private int selectedModel = 0;
 
-    private int gridM = 20; private int gridN = 20;
+    private int gridM = 20; private int gridN = 20; private int  gridMpost = 2; private int  gridNpost = 2;
 
     Mat4 model, rotation, translation, scale;
 
@@ -45,9 +44,6 @@ public class Renderer extends AbstractRenderer {
     private boolean orthoProjection = false;
 
     private int button;
-
-    //texture setting
-    private boolean texturePNG = false;
 
     //Second Object
     private Mat4 secondObjMove;
@@ -58,13 +54,21 @@ public class Renderer extends AbstractRenderer {
     //Cv8 - Post processing
     private OGLRenderTarget renderTarget;
     private Grid gridPost;
+    private int shaderProgramPost;
+
+    //Osvětlení reflektorem
+    private int loc_spotCutOffDir;
+    private float spotCutOff;
+
 
     @Override
     public void init() {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        glEnable(GL_DEPTH_TEST);
 
         buffers = Grid.gridListTriangle(gridM, gridN);
+        buffersPost = Grid.gridListTriangle(gridMpost,gridNpost);
+
+        renderTarget = new OGLRenderTarget(width, height);
 
         camera = new Camera()
                 .withPosition(new Vec3D(0.f, 0f, 0f))
@@ -98,12 +102,19 @@ public class Renderer extends AbstractRenderer {
         loc_secondObj = glGetUniformLocation(shaderProgram, "u_secondObj");
         loc_time = glGetUniformLocation(shaderProgram, "u_time");
 
+        loc_post = glGetUniformLocation(shaderProgramPost, "u_post");
+
+        //Osvětlení reflektorem
+        loc_spotCutOffDir = glGetUniformLocation(shaderProgram, "spotCutOffDir");
+        spotCutOff = 0.99f;
+
         texture2D = new OGLTexture2D.Viewer();
         textHelper = new OGLTextRenderer(Main.getWidth(), Main.getHeight());
 
         try {
-            textureBase = new OGLTexture2D("./textures/bricks.jpg");
+            //textureBase = new OGLTexture2D("./textures/bricks.jpg");
             textureNormal = new OGLTexture2D("./textures/bricksn.png");
+            textureBase = new OGLTexture2D("./textures/mosaic.jpg");
         }
         catch (IOException e) {
             throw new RuntimeException(e);
@@ -116,20 +127,32 @@ public class Renderer extends AbstractRenderer {
 
         secondObjPos = new Vec3D(5,5,5);
         secondObjMove = new Mat4Transl(secondObjPos);
-
-        //Cv8
-        gridPost = new Grid(20, 20);
-        //renderTarget = new OGLRenderTarget(width, height);
     }
 
     @Override
     public void display() {
+        glEnable(GL_DEPTH_TEST);
+
+        renderMain();
+
+        renderPost();
+
+        glDisable(GL_DEPTH_TEST);
+    }
+
+    //Cv8
+    private void renderMain(){
+        renderTarget.bind();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glUseProgram(shaderProgram);
+
         // View
         loc_uView = glGetUniformLocation(shaderProgram, "u_View");
         glUniformMatrix4fv(loc_uView, false, camera.getViewMatrix().floatArray());
 
         textureBase.bind(shaderProgram, "textureBase", 0);
-        textureBase.bind(shaderProgram, "textureNormal", 1);
+        textureNormal.bind(shaderProgram, "textureNormal", 1);
 
         loc_uSelectedModel = glGetUniformLocation(shaderProgram, "selectedModel");
 
@@ -140,6 +163,9 @@ public class Renderer extends AbstractRenderer {
 
         //Model
         glUniformMatrix4fv(loc_uModel, false, ToFloatArray.convert(model));
+
+        //Osvětlení reflektorem
+        glUniform1f(loc_spotCutOffDir, spotCutOff);
 
         //Vykreslení pro modely
         buffersMode(buffers);
@@ -162,29 +188,22 @@ public class Renderer extends AbstractRenderer {
         //Vykreslení pro secondObject
         buffersMode(buffers);
 
-        //renderMain();
-        //renderPost();
-    }
-
-    //Cv8
-    private void renderMain(){
-        glUseProgram(shaderProgram);
-        //renderTarget.bind();
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     }
 
     private void renderPost(){
-        glUseProgram(shaderProgramPost);
-
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glUseProgram(shaderProgramPost);
 
-        //Načíst texturu z renderTarget
-        //renderTarget.getColorTexture().bind(shaderProgramPost, "textureBase",0);
-        buffersMode(buffers);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glViewport(0, 0, width, height);
+        renderTarget.getColorTexture().bind(shaderProgramPost, "textureBase", 0);
+
+        buffersMode(buffersPost);
+
+        glUniform1f(loc_post, height);
+        timeChange += 0.01;
+        //glUniform1f(locTimePostProc, timeChange);
     }
 
 
@@ -382,17 +401,19 @@ public class Renderer extends AbstractRenderer {
                     //List / Strip
                     case GLFW_KEY_I -> {
                         buffers = Grid.gridStripsTriangle(gridM, gridN);
+                        buffersPost = Grid.gridStripsTriangle(gridMpost, gridNpost);
                         gridModeList = false;
                         System.out.println("List");
                     }
                     case GLFW_KEY_U -> {
                         buffers = Grid.gridListTriangle(gridM, gridN);
+                        buffersPost = Grid.gridListTriangle(gridMpost, gridNpost);
                         gridModeList = true;
                         System.out.println("Strip");
                     }
                     //Osvětlovací model
                     case GLFW_KEY_L -> {
-                        if (lightModeValue == 7 ) {
+                        if (lightModeValue == 9 ) {
                             lightModeValue = 0; System.out.println("L " + lightModeValue);}
                         else {
                             lightModeValue++; System.out.println("L " + lightModeValue);}
@@ -402,6 +423,19 @@ public class Renderer extends AbstractRenderer {
                         if (selectedModel >= 7) {selectedModel = 0 ;}
                         selectedModel++;
                         System.out.println("Object " + selectedModel);
+                    }
+
+                    //Osvětlení reflektorem
+                    case GLFW_KEY_B -> {
+                        if (spotCutOff < 1.0) {
+                            spotCutOff += 0.05;
+                        }
+                    }
+
+                    case GLFW_KEY_V -> {
+                        if (spotCutOff > 1.0) {
+                            spotCutOff -= 0.05;
+                        }
                     }
                 }
             }
@@ -442,14 +476,6 @@ public class Renderer extends AbstractRenderer {
             buffers.draw(GL_TRIANGLES, shaderProgram);
         } else {
             buffers.draw(GL_TRIANGLE_STRIP, shaderProgram);
-        }
-    }
-
-    private void textureMode(){
-        if (!texturePNG) {
-            textureBase.bind(shaderProgram, "textureBase", 0);
-        } else {
-            textureNormal.bind(shaderProgram, "textureNormal", 0);
         }
     }
 }

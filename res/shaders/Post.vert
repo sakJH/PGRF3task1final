@@ -1,13 +1,11 @@
 #version 330
 in vec2 inPosition;
-out vec2 texCoord;
+
+out vec2 texCoords;
 
 void main() {
+    texCoords = inPosition;
 
-    texCoord = inPosition;
-
-    vec2 position = inPosition * 2 - 1;
-    vec2 finalPos = position;
-
-    gl_Position = vec4(finalPos, 0, 1.);
+    vec2 newPos = inPosition * 2 - 1;
+    gl_Position = vec4(newPos, 0., 1.);
 }

@@ -5,13 +5,11 @@ uniform mat4 u_View;
 uniform mat4 u_Proj;
 uniform mat4 u_Model;
 
-//TODO
-uniform float type;
 out vec3 objectPos;
 out vec3 normalDir;
 
 uniform vec3 eyePos;
-
+uniform  float spotCutOff;
 
 out vec3 eyeVec;
 out vec2 texCoords;
@@ -27,7 +25,6 @@ out vec4 objectPosition;
 
 out float dist;
 
-//TODO secondOBJ
 uniform vec3 u_secondObj;
 uniform float u_time;
 out vec3 secondObjDir;
