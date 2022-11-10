@@ -8,12 +8,5 @@ out vec4 outColor;
 
 void main() {
 
-    vec4 baseColor = texture(textureBase, texCoords);
 
-    if (gl_FragCoord.y < 100 || gl_FragCoord.y > 250) {
-
-        outColor = texture(textureBase, texCoords).rbga;
-    } else {
-        outColor = texture(textureBase, texCoords).rgba;
-    }
 }

@@ -20,7 +20,7 @@ vec3 lightSoure = vec3(0.5, 0.5, 0.1);
 
 const float PI = 3.1415926;
 
-uniform int selectedModel;
+uniform int u_SelectedModel;
 out vec4 objectPosition;
 
 out float dist;
@@ -51,22 +51,22 @@ vec3 getPlotNormal(vec2 vec) {
     return cross(u, v);
 }
 
-// Prstenc ; Kartézská souřadnice 2
+// Prsten ; Kartézská souřadnice 2
 vec3 getRing(vec2 vec) {
     float azim = vec.y * 2.0 * PI;
     float zen = vec.x * 2.0 * PI;
 
     float x = 3 * cos(azim) + cos(zen) * cos(azim);
     float y = 3 * sin(azim) + cos(zen) * sin(azim);
-    float z = sin(zen);
+    float z = (sin(zen))/2;
 
     return vec3(x, y, z);
 }
 //Sloní hlava - ppt 1-10 -> 67 ; Sférická souřadnice 1
 vec3 getElephantHand(vec2 vec){
-    float azim = vec.x * 2 * PI;
-    float zen = vec.y * PI;
-    float r = 3 + cos(4 * azim);
+    float azim = (vec.x * 2 * PI) ;
+    float zen = (vec.y * PI) ;
+    float r = (3 + cos(4 * azim)) / 2;
 
     float x = r * sin(zen) * cos(azim) ;
     float y = r * sin(zen) * sin(azim);
@@ -76,13 +76,13 @@ vec3 getElephantHand(vec2 vec){
 }
 //Sombrero - ppt 1-10 -> 71 ; Cylindr. souřadnice 1
 vec3 getSombrero(vec2 vec){
-    float azim = vec.x * 2 * PI;
-    float zen = vec.y * 2 * PI;
-    float v = 2 * sin(zen);
+    float azim = (vec.x * 2 * PI);
+    float zen = (vec.y * 2 * PI);
+    float v = (2 * sin(zen));
 
-    float x = zen * cos(azim);
-    float y = zen * sin(azim);
-    float z = v;
+    float x = (zen * cos(azim))/2;
+    float y = (zen * sin(azim))/2;
+    float z = v / 2;
 
     return vec3(x, y, z); //TODO - nefunguje
 }
@@ -143,22 +143,12 @@ vec3 transKartezToCylinder(vec3 vec){
 
     return vec3(r,azim,zen);
 }
-/*
-vec3 getSecondSphere(vec2 vec){
-    float azim = vec.x * PI;
-    float zem = vec.y * PI / 2.0;
-    float r = 0.5;
 
-    float x = r * cos(azim) * cos(zem);
-    float y =  r * sin(azim) * cos(zem);
-    float z =  r * sin(zem);
-    return vec3(x, y, z);
-}*/
 
 vec3 getSecondSphere(vec2 vec) {
-    float s = PI * 0.5 - PI * vec.y;
-    float t = 2 * PI * vec.x;
-    float r = 2;
+    float s = (PI * 0.5 - PI * vec.y) ;
+    float t = (2 * PI * vec.x) ;
+    float r = 0.5;
 
     float x = sin(t) * cos(s) * r;
     float y = cos(t) * cos(s) * r;
@@ -194,35 +184,35 @@ void main() {
     vec3 finalPos;
 
     //Výber těles
-    if (selectedModel == 0 ){
+    if (u_SelectedModel == 0 ){
         //normal = getNormal(position);
         finalPos = getPlot(position);
     }
-    else if (selectedModel == 1){
+    else if (u_SelectedModel == 1){
         normal = getNormal(position);
         finalPos = getRing(position);
     }
-    else if (selectedModel == 2){
+    else if (u_SelectedModel == 2){
         normal = getNormal(position);
         finalPos = getElephantHand(position);
     }
-    else if (selectedModel == 3){
+    else if (u_SelectedModel == 3){
         normal = getNormal(position);
         finalPos = getSombrero(position);
     }
-    else if (selectedModel == 4){
+    else if (u_SelectedModel == 4){
         normal = getNormal(position);
         finalPos = getCylinder(position);
     }
-    else if (selectedModel == 5){
+    else if (u_SelectedModel == 5){
         normal = getNormal(position);
         finalPos = getSphere(position);
     }
-    else if (selectedModel == 6){
+    else if (u_SelectedModel == 6){
         normal = getNormal(position);
         finalPos = getUnknown(position);
     }
-    else if (selectedModel == 7){
+    else if (u_SelectedModel == 7){
         //Second OBj
         normal = getNormal(position);
         finalPos = getSecondSphere(position);
@@ -255,7 +245,7 @@ void main() {
 
     vec4 finalPos4 = u_Model * vec4(finalPos, 1.0);
 
-    dist = length(lightPosition);
+    dist = length(u_secondObj - finalPos4.xyz);
 
     //secondObj
     secondObjDir = normalize(u_secondObj - finalPos4.xyz);
