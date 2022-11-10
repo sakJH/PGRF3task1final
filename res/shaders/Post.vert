@@ -3,6 +3,8 @@ in vec2 inPosition;
 
 out vec2 texCoords;
 
+uniform sampler2D textureBase;
+
 void main() {
     texCoords = inPosition;
 
