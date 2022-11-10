@@ -67,7 +67,8 @@ public class Renderer extends AbstractRenderer {
         buffers = Grid.gridListTriangle(gridM, gridN);
         buffersPost = Grid.gridListTriangle(gridMpost,gridNpost);
 
-        renderTarget = new OGLRenderTarget(width, height);
+        renderTarget = new OGLRenderTarget(Main.getWidth(), Main.getHeight());
+        
 
         camera = new Camera()
                 .withPosition(new Vec3D(0.f, 0f, 0f))
@@ -143,10 +144,12 @@ public class Renderer extends AbstractRenderer {
 
     //Cv8
     private void renderMain(){
-        //renderTarget.bind();
+        renderTarget.bind();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(shaderProgram);
+        glUseProgram(shaderSecond);
+
 
         // View
         loc_uView = glGetUniformLocation(shaderProgram, "u_View");
@@ -197,9 +200,9 @@ public class Renderer extends AbstractRenderer {
 
         glUseProgram(shaderProgramPost);
 
-//        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//        glViewport(0, 0, width, height);
-        //renderTarget.getColorTexture().bind(shaderProgramPost, "textureBase", 0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glViewport(0, 0, Main.getWidth(), Main.getHeight());
+        renderTarget.getColorTexture().bind(shaderProgramPost, "textureBase", 0);
 
         buffersMode(buffersPost, shaderProgramPost);
 
