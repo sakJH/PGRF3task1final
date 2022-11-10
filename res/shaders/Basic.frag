@@ -1,36 +1,35 @@
 #version 330
-in vec2 texCoords;
-in vec3 toLightVec;
-//CV7
-in vec3 normalVec;
-
-in vec3 normal;
-in vec3 eyeVec;
-
-uniform float u_ColorR;
 
 uniform sampler2D textureBase;
 uniform sampler2D textureNormal;
 
-out vec4 outColor;
+uniform int u_LightMode;
 
-uniform int lightMode;
+//Osvětlení reflektorem
+uniform float spotCutOff;
+uniform vec3 spotCutOffDir;
+
+uniform float constantAttenuation, linearAttenuation, quadraticAttenuation;
+
+uniform vec3 u_secondObj;
+
+in vec2 texCoords;
+in vec3 toLightVec;
+in vec3 normalVec;
+in vec3 normal;
+in vec3 eyeVec;
+//secondObj
+in vec3 seconObjDir;
+in float secondObjDis;
+
+out vec4 outColor;
 
 vec4 ambientColor = vec4(0.3, 0.3, 0.3, 1);
 vec4 diffuseColor = vec4(0.5, 0.5, 0.2, 1);
 vec4 specularColor = vec4(0.5, 0.5, 0.2, 1);
 
 varying float dist;
-uniform float constantAttenuation, linearAttenuation, quadraticAttenuation;
 
-//secondObj
-in vec3 seconObjDir;
-in float secondObjDis;
-uniform vec3 u_secondObj;
-
-//Osvětlení reflektorem
-uniform float spotCutOff;
-uniform vec3 spotCutOffDir;
 
 void main() {
     vec4 baseColor = texture(textureBase, texCoords);
@@ -67,35 +66,35 @@ void main() {
     float blend = clamp((spotEffect - spotCutOff) / (1 - spotCutOff), 0., 1.);
 
     //Módy osvětlení
-    if (lightMode == 0) {
+    if (u_LightMode == 0) {
         outColor = (ambient + diffuse + specular) * baseColor;
-    } else if (lightMode == 1) {
+    } else if (u_LightMode == 1) {
         //ambientni složka + textura
         outColor = ambient * baseColor;
-    } else if (lightMode == 2) {
+    } else if (u_LightMode == 2) {
         // difuzni složka + textura
         outColor = diffuse * baseColor;
-    } else if (lightMode == 3) {
+    } else if (u_LightMode == 3) {
         // zrcadlova složka + textura
         outColor = specular * baseColor;
-    } else if (lightMode == 4) {
+    } else if (u_LightMode == 4) {
         //bez osvětlovacího modelu
         outColor = baseColor;
-    } else if (lightMode == 5) {
+    } else if (u_LightMode == 5) {
         // všechny složky bez textura
         outColor = (ambient + diffuse + specular);
-    } else if (lightMode == 6) {
+    } else if (u_LightMode == 6) {
         // Útlum složka
         //outColor = (ambient + att * (diffuse + specular)) * baseColor;
         outColor = (ambient + att * (diffuse + specular) ) * baseColor;
-    } else if (lightMode == 7) {
+    } else if (u_LightMode == 7) {
         //TODO Second OBj !! ??
 
-    } else if (lightMode == 8) {
+    } else if (u_LightMode == 8) {
         //spotEffect
         if(spotEffect > spotCutOff) { outColor = ambient + att * (diffuse + specular); }
         else { outColor = ambient; }
-    } else if (lightMode == 8) {
+    } else if (u_LightMode == 8) {
         //Blend
         outColor = (mix(ambient, ambient + att * (diffuse + specular),blend)) * baseColor;
     }
