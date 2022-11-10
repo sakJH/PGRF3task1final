@@ -130,6 +130,7 @@ public class Renderer extends AbstractRenderer {
 
     //Cv8
     private void renderMain(){
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glUseProgram(shaderProgram);
         glUseProgram(shaderSecond);
 
