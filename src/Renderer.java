@@ -14,40 +14,21 @@ import static org.lwjgl.opengl.GL20.glGetUniformLocation;
 import static org.lwjgl.opengl.GL33.*;
 
 public class Renderer extends AbstractRenderer {
-    private int shaderProgram, shaderPost, shaderSecond;
+    private int shaderProgram, shaderPost;
     private Camera camera;
-    private OGLTexture2D textureBase; private OGLTexture2D textureNormal;
-    private boolean mouseButton1, mouseButton2, mouseButton3;
-    private double ox, oy;
-    double camSpeed = 0.25;
-    float timeChange = 0;
-    private Main main;
+    private OGLTexture2D textureBase; private OGLTexture2D textureNormal; private OGLRenderTarget renderTarget;
+    private double ox, oy, camSpeed = 0.25;
+    float timeChange = 0, secondObjPosX, secondObjPosY, spotCutOff;
     int loc_uProj, loc_uView, loc_uSelectedModel, loc_lightMode, loc_uModel, loc_secondObj, loc_time, loc_EyePosition, loc_SpotCutOff, loc_ConstantAttenuation, loc_LinearAttenuation, loc_QuadraticAttenuation;
     private OGLBuffers buffers, buffersPost;
-    private boolean gridModeList = true;
-    private int gridM = 20; private int gridN = 20; private int  gridMpost = 2; private int  gridNpost = 2, lightModeValue = 0, selectedModel = 0;
+    private boolean gridModeList = true, leftMouse, rightMouse, middleMouse, mousePressed = false;
+    private int gridM = 20; private int gridN = 20; private int  gridMpost = 2; private int  gridNpost = 2, lightModeValue = 0, selectedModel = 0, secondObjModel = 0, polygonModeNumber = 0;
     Mat4 model, projection, rotation, translation, scale, secondObjMove;
-    private boolean button, leftMouse, rightMouse, middleMouse;
-    private Vec3D secondObjPos;
-    private int secondObjModel = 0;
-    private float secondObjPosX; private float secondObjPosY;
-
-    //Cv8 - Post processing
-    private OGLRenderTarget renderTarget;
-    private Grid gridPost;
-
-    private float spotCutOff;
-
-    private boolean mousePressed = false;
-
-    private Vec3D eyePos;
-
-    int polygonModeNumber = 0;
+    private Vec3D secondObjPos, eyePos;
 
     @Override
     public void init() {
 
-        //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         poygonMode(polygonModeNumber);
 
         glEnable(GL_DEPTH_TEST);
@@ -107,7 +88,6 @@ public class Renderer extends AbstractRenderer {
 
         secondObjPos = new Vec3D(5,5,5);
         secondObjMove = new Mat4Transl(secondObjPos);
-
     }
 
     @Override
@@ -228,11 +208,11 @@ public class Renderer extends AbstractRenderer {
         @Override
         public void invoke(long window, int button, int action, int mods) {
             if (button == GLFW_MOUSE_BUTTON_LEFT || button == GLFW_MOUSE_BUTTON_RIGHT) {
-                double[] xPos = new double[1];
-                double[] yPos = new double[1];
-                glfwGetCursorPos(window, xPos, yPos);
-                ox = xPos[0];
-                oy = yPos[0];
+                double[] xBuffer = new double[1];
+                double[] yBuffer = new double[1];
+                glfwGetCursorPos(window, xBuffer, yBuffer);
+                ox = xBuffer[0];
+                oy = yBuffer[0];
             }
             if (button == GLFW_MOUSE_BUTTON_LEFT) leftMouse = (action == GLFW_PRESS);
             else if (button == GLFW_MOUSE_BUTTON_RIGHT) rightMouse = (action == GLFW_PRESS);
@@ -258,103 +238,60 @@ public class Renderer extends AbstractRenderer {
 
             if (action == GLFW_PRESS || action == GLFW_REPEAT) {
                 switch (key) {
-                    case GLFW_KEY_W -> {
-                        camera = camera.forward(camSpeed);
-                        System.out.println("S");
-                    }
-                    case GLFW_KEY_S -> {
-                        camera = camera.backward(camSpeed);
-                        System.out.println("S");
-                    }
-                    case GLFW_KEY_A -> {
-                        camera = camera.left(camSpeed);
-                        System.out.println("A");
-                    }
-                    case GLFW_KEY_D -> {
-                        camera = camera.right(camSpeed);
-                        System.out.println("D");
-                    }
+                    case GLFW_KEY_W -> { camera = camera.forward(camSpeed); }
+                    case GLFW_KEY_S -> { camera = camera.backward(camSpeed); }
+                    case GLFW_KEY_A -> { camera = camera.left(camSpeed); }
+                    case GLFW_KEY_D -> { camera = camera.right(camSpeed); }
                     //Up, Down
-                    case GLFW_KEY_LEFT_SHIFT -> {
-                        camera = camera.up(camSpeed);
-                        System.out.println("L-Shift");
-                    }
-                    case GLFW_KEY_LEFT_CONTROL -> {
-                        camera = camera.down(camSpeed);
-                        System.out.println("L-CTRL");
-                    }
-
-                    //TODO - reset
+                    case GLFW_KEY_LEFT_SHIFT -> { camera = camera.up(camSpeed); }
+                    case GLFW_KEY_LEFT_CONTROL -> { camera = camera.down(camSpeed); }
+                    //Reset
                     case GLFW_KEY_R -> {
                         model = new Mat4Identity();
                         rotation = new Mat4Identity();
                         translation = new Mat4Identity();
-                    }
 
-                    // Perspektivní a ortogonální projekce
-                    //case GLFW_KEY_P -> camera = camera.withFirstPerson(!camera.getFirstPerson());
-                    case GLFW_KEY_P -> {
+                        camera = new Camera()
+                                .withPosition(new Vec3D(0.f, 0f, 0f))
+                                .withAzimuth(Math.PI * 1.25)
+                                .withZenith(Math.PI * -0.125)
+                                .withFirstPerson(false)
+                                .withRadius(3);
                         projection = new Mat4PerspRH(Math.PI / 3, Main.getHeight() / (float) Main.getWidth(), 0.1f, 50.f);
-                        System.out.println("P");
                     }
-                    case GLFW_KEY_O-> {
-                        projection = new Mat4OrthoRH(2.3, 2.3, 0.1, 20);
-                        System.out.println("O");
-                    }
+                    // Perspektivní a ortogonální projekce
+                    case GLFW_KEY_P -> { projection = new Mat4PerspRH(Math.PI / 3, Main.getHeight() / (float) Main.getWidth(), 0.1f, 50.f); }
+                    case GLFW_KEY_O -> { projection = new Mat4OrthoRH(2.3, 2.3, 0.1, 20); }
                     //Scale
-                    case GLFW_KEY_Z -> {
-                        projection = projection.mul(new Mat4Scale(0.9,0.9,0.9));
-                        System.out.println("scale --");
-                    }
-                    case GLFW_KEY_X -> {
-                        projection = projection.mul(new Mat4Scale(1.1,1.1,1.1));
-                        System.out.println("scale++");
-                    }
-
+                    case GLFW_KEY_Z -> { projection = projection.mul(new Mat4Scale(0.9,0.9,0.9)); }
+                    case GLFW_KEY_X -> { projection = projection.mul(new Mat4Scale(1.1,1.1,1.1)); }
                     //List / Strip
                     case GLFW_KEY_I -> {
                         buffers = Grid.gridStripsTriangle(gridM, gridN);
                         gridModeList = false;
-                        System.out.println("List");
+                        System.out.println("List grid mode");
                     }
                     case GLFW_KEY_U -> {
                         buffers = Grid.gridListTriangle(gridM, gridN);
                         gridModeList = true;
-                        System.out.println("Strip");
+                        System.out.println("Strip grid mode");
                     }
                     //Osvětlovací model
                     case GLFW_KEY_L -> {
-                        if (lightModeValue == 12 ) {
-                            lightModeValue = 0; System.out.println("L " + lightModeValue);}
-                        else {
-                            lightModeValue++; System.out.println("L " + lightModeValue);}
+                        if (lightModeValue == 12 ) { lightModeValue = 0; System.out.println("L " + lightModeValue); }
+                        else { lightModeValue++; System.out.println("L " + lightModeValue); }
                     }
                     //Objekty
                     case GLFW_KEY_M -> {
                         if (selectedModel >= 7) {selectedModel = 0 ;}
                         selectedModel++;
-
                         System.out.println("Object " + selectedModel);
                     }
-
                     //Osvětlení reflektorem
-                    case GLFW_KEY_B -> {
-                        if (spotCutOff < 1.0) {
-                            spotCutOff += 0.02;
-                            System.out.println(spotCutOff);
-                        }
-                    }
-                    case GLFW_KEY_V -> {
-                        if (spotCutOff > 0.9) {
-                            spotCutOff -= 0.02;
-                            System.out.println(spotCutOff);
-                        }
-                    }
-                    case GLFW_KEY_C -> {
-                        polygonModeNumber++;
-                        System.out.println(polygonModeNumber);
-                        if (polygonModeNumber == 3) { polygonModeNumber = 0;}
-                    }
+                    case GLFW_KEY_B -> { if (spotCutOff < 1.0) { spotCutOff += 0.02; } }
+                    case GLFW_KEY_V -> { if (spotCutOff > 0.9) { spotCutOff -= 0.02; } }
+                    //Polygon mode - Fill, Line, Point
+                    case GLFW_KEY_C -> { polygonModeNumber++; if (polygonModeNumber == 3) { polygonModeNumber = 0;} }
                 }
             }
         }
@@ -368,14 +305,6 @@ public class Renderer extends AbstractRenderer {
     @Override
     public GLFWKeyCallback getKeyCallback() {
         return keyCallback;
-    }
-
-    private void setProjection(boolean ortho) {
-        if(ortho) {
-            projection = new Mat4OrthoRH(Math.PI / 3, Main.getHeight() / (float) Main.getWidth(), 0.1f, 50.f);
-            return;
-        }
-        projection = new Mat4PerspRH(Math.PI / 3, Main.getHeight() / (float) Main.getWidth(), 0.01f, 50.f);
     }
 
     private void buffersMode(OGLBuffers buffers, int shader) {
@@ -394,7 +323,6 @@ public class Renderer extends AbstractRenderer {
         if (mode == 2) { glPolygonMode(GL_FRONT_AND_BACK, GL_POINT); }
 
     }
-
 
     @Override
     public GLFWCursorPosCallback getCursorCallback() {
