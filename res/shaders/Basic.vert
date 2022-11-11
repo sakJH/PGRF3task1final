@@ -4,32 +4,26 @@ in vec2 inPosition;
 uniform mat4 u_View;
 uniform mat4 u_Proj;
 uniform mat4 u_Model;
+uniform vec3 eyePos;
+uniform  float spotCutOff;
+uniform int u_SelectedModel;
+uniform vec3 u_secondObj;
+uniform float u_time;
 
 out vec3 objectPos;
 out vec3 normalDir;
-
-uniform vec3 eyePos;
-uniform  float spotCutOff;
-
 out vec3 eyeVec;
 out vec2 texCoords;
 out vec3 toLightVec;
 out vec3 normalVec;
+out vec4 objectPosition;
+out float dist;
+out vec3 secondObjDir;
+out float secondObjDis;
 
 vec3 lightSoure = vec3(0.5, 0.5, 0.1);
 
 const float PI = 3.1415926;
-
-uniform int u_SelectedModel;
-out vec4 objectPosition;
-
-out float dist;
-
-uniform vec3 u_secondObj;
-uniform float u_time;
-out vec3 secondObjDir;
-out float secondObjDis;
-
 
 vec3 getNormal(vec2 vec) {
     float azim = vec.x * PI * 2.;
@@ -110,7 +104,7 @@ vec3 getSphere(vec2 vec) {
     return vec3(x, y, z);
 }
 
-//Cosi jaksi https://reference.wolfram.com/language/ref/SphericalPlot3D.html  Sphere
+// https://reference.wolfram.com/language/ref/SphericalPlot3D.html  Sphere
 //Cylinder
 vec3 getUnknown(vec2 vec) {
     float azim = 1 + 2 * cos(2 * vec.y);
@@ -123,7 +117,6 @@ vec3 getUnknown(vec2 vec) {
 
     return vec3(x, y, z);
 }
-
 
 // Přepočty na souřadicové systémy
 vec3 transKartezToSferic(vec3 vec){
@@ -144,7 +137,6 @@ vec3 transKartezToCylinder(vec3 vec){
     return vec3(r,azim,zen);
 }
 
-
 vec3 getSecondSphere(vec2 vec) {
     float s = (PI * 0.5 - PI * vec.y) ;
     float t = (2 * PI * vec.x) ;
@@ -163,17 +155,6 @@ vec3 getTangent() {
     // TODO: implementovat
     return vec3(0);
 }
-/*
-mat3 paramTangent(vec2 vec){
-    float delta = 0.001;
-    vec3 tx = paramPos(vec + vec2(delta, 0)) - paramPos(vec - vec2(delta, 0));
-    vec3 ty = paramPos(vec + vec2(0, delta)) - paramPos(vec - vec2(0, delta));
-    tx = normalize(tx);
-    ty = normalize(ty);
-    vec3 tz = cross(tx,ty);
-    ty = cross(tz,tx);
-    return mat3(tx,ty,tz);
-}*/
 
 void main() {
     texCoords = inPosition;
@@ -185,8 +166,8 @@ void main() {
 
     //Výber těles
     if (u_SelectedModel == 0 ){
-        //normal = getNormal(position);
-        finalPos = getPlot(position);
+        normal = getNormal(position);
+        finalPos = vec3(position,0);
     }
     else if (u_SelectedModel == 1){
         normal = getNormal(position);
@@ -236,7 +217,7 @@ void main() {
     // Osvětlovací model
     vec4 lightPosition = u_View * vec4(lightSoure, 1.);
     toLightVec = lightPosition.xyz - objectPosition.xyz;
-    //normalVector = transpose(inverse(mat3(u_View))) * getNormal();
+    normalVec = transpose(inverse(mat3(u_View))) * normal;
 
     vec2 a = vec2(float (2));
 

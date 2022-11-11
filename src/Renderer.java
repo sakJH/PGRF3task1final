@@ -43,10 +43,14 @@ public class Renderer extends AbstractRenderer {
 
     private Vec3D eyePos;
 
+    int polygonModeNumber = 0;
+
     @Override
     public void init() {
 
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        poygonMode(polygonModeNumber);
+
         glEnable(GL_DEPTH_TEST);
 
         buffers = Grid.gridListTriangle(gridM, gridN);
@@ -88,7 +92,7 @@ public class Renderer extends AbstractRenderer {
         //renderTarget = new OGLRenderTarget(800, 600);
 
         try {
-            textureBase = new OGLTexture2D("./textures/bricks.jpg");
+            textureBase = new OGLTexture2D("./textures/hypnotic.jpg");
             textureNormal = new OGLTexture2D("./textures/bricksn.png");
         }
         catch (IOException e) {
@@ -113,6 +117,8 @@ public class Renderer extends AbstractRenderer {
     }
 
     private void renderMain(){
+
+        poygonMode(polygonModeNumber);
 
         glUseProgram(shaderProgram);
 
@@ -398,12 +404,16 @@ public class Renderer extends AbstractRenderer {
                             System.out.println(spotCutOff);
                         }
                     }
-
                     case GLFW_KEY_V -> {
                         if (spotCutOff > 0.9) {
                             spotCutOff -= 0.02;
                             System.out.println(spotCutOff);
                         }
+                    }
+                    case GLFW_KEY_C -> {
+                        polygonModeNumber++;
+                        System.out.println(polygonModeNumber);
+                        if (polygonModeNumber == 3) { polygonModeNumber = 0;}
                     }
                 }
             }
@@ -445,6 +455,15 @@ public class Renderer extends AbstractRenderer {
         } else {
             buffers.draw(GL_TRIANGLE_STRIP, shader);
         }
+    }
+
+    private void poygonMode(int mode){
+        if (mode == 0) { glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); }
+
+        if (mode == 1) { glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); }
+
+        if (mode == 2) { glPolygonMode(GL_FRONT_AND_BACK, GL_POINT); }
+
     }
 }
 
