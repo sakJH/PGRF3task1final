@@ -16,7 +16,6 @@ import static org.lwjgl.opengl.GL33.*;
 public class Renderer extends AbstractRenderer {
     private int shaderProgram, shaderPost, shaderSecond;
     private Camera camera;
-    private Mat4 projection;
     private OGLTexture2D textureBase; private OGLTexture2D textureNormal;
     private boolean mouseButton1, mouseButton2, mouseButton3;
     private double ox, oy;
@@ -27,8 +26,8 @@ public class Renderer extends AbstractRenderer {
     private OGLBuffers buffers, buffersPost;
     private boolean gridModeList = true;
     private int gridM = 20; private int gridN = 20; private int  gridMpost = 2; private int  gridNpost = 2, lightModeValue = 0, selectedModel = 0;
-    Mat4 model, rotation, translation, scale, secondObjMove;
-    private int button;
+    Mat4 model, projection, rotation, translation, scale, secondObjMove;
+    private boolean button, leftMouse, rightMouse, middleMouse;
     private Vec3D secondObjPos;
     private int secondObjModel = 0;
     private float secondObjPosX; private float secondObjPosY;
@@ -187,123 +186,57 @@ public class Renderer extends AbstractRenderer {
         buffersMode(buffersPost, shaderPost);
     }
 
-    private GLFWCursorPosCallback cpCallbacknew = new GLFWCursorPosCallback() {
+    private final GLFWCursorPosCallback cursorPosCallback = new GLFWCursorPosCallback() {
         @Override
         public void invoke(long window, double x, double y) {
-            if (mouseButton1) {
-                if (button == GLFW_MOUSE_BUTTON_LEFT)
+            double dx = (ox - x);
+            double dy = (oy - y);
+            if (leftMouse) {
+                //Pohyb s kamerou
+                camera = camera.addAzimuth((double) Math.PI * (ox - x) / Main.getWidth())
+                        .addZenith((double) Math.PI * (oy - y) / Main.getWidth());
+            }
+            else if (rightMouse) {
+                //Rotace
+                double rotX = model.get(3, 0);
+                double rotY = model.get(3, 1);
+                double rotZ = model.get(3, 2);
+
+                if (rotX == 0 && rotY == 0 && rotZ == 0) {
+                    model = model.mul(new Mat4RotXYZ(0, Math.PI * (dy) / Main.getHeight(), -(Math.PI * (dx) / Main.getWidth())));
+                }
+                else
                 {
-                    //Pohyb s kamerou
-                    camera = camera.addAzimuth((double) Math.PI * (ox - x) / Main.getWidth())
-                            .addZenith((double) Math.PI * (oy - y) / Main.getWidth());
-                    ox = x;
-                    oy = y;
+                    model = model.mul(new Mat4Transl(-rotX, -rotY, -rotZ));
+                    model = model.mul(new Mat4RotXYZ(0, Math.PI * (dy) / Main.getHeight(), -(Math.PI * (dx) / Main.getWidth())));
+                    model = model.mul(new Mat4Transl(rotX, rotY, rotZ));
                 }
             }
-            //
-            if (mouseButton2)
-            {
-                if (button == GLFW_MOUSE_BUTTON_1)
-                {
-                    System.out.println("Right Mouse rotation");
-                    double rotX = (ox - x) / 50.0;
-                    double rotY = (oy - y) / 50.0;
-                    rotation = rotation.mul(new Mat4RotXYZ(rotX, 0, rotY));
-                    model = rotation.mul(translation);
-                    ox = x;
-                    oy = y;
-                }
+            else if (middleMouse) {
+                //Translace
+                double trX = (ox - x) / 50;
+                double trY = (oy - y) / 50;
+
+                model = model.mul(new Mat4Transl(0, trX, trY));
             }
-            if (mouseButton3)
-            {
-                System.out.println(mouseButton3 + " mb3");
-                System.out.println(button + " mb3");  //TODO opravit
-                System.out.println(GLFW_MOUSE_BUTTON_MIDDLE);
-                //Translation
-                if (button == GLFW_MOUSE_BUTTON_2)
-                {
-                    System.out.println("middle §§§!!!!!§§§");
-                    double trX = (ox - x) / 50;
-                    double trY = (oy - y) / 50;
-                    translation = translation.mul(new Mat4Transl(trX, trY, 0));
-                    model = rotation.mul(translation);
-                    ox = x;
-                    oy = y;
-                }
-            }
+            ox = x;
+            oy = y;
         }
     };
 
-    private GLFWMouseButtonCallback mbCallback = new GLFWMouseButtonCallback () {
+    private final GLFWMouseButtonCallback mouseButtonCallback = new GLFWMouseButtonCallback() {
         @Override
         public void invoke(long window, int button, int action, int mods) {
-            mouseButton1 = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
-            mouseButton2 = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
-            mouseButton3 = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS;
-            //Left Mouse
-            if (button==GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS){
-                mouseButton1 = true;
-                DoubleBuffer xBuffer = BufferUtils.createDoubleBuffer(1);
-                DoubleBuffer yBuffer = BufferUtils.createDoubleBuffer(1);
-                glfwGetCursorPos(window, xBuffer, yBuffer);
-                ox = xBuffer.get(0);
-                oy = yBuffer.get(0);
+            if (button == GLFW_MOUSE_BUTTON_LEFT || button == GLFW_MOUSE_BUTTON_RIGHT) {
+                double[] xPos = new double[1];
+                double[] yPos = new double[1];
+                glfwGetCursorPos(window, xPos, yPos);
+                ox = xPos[0];
+                oy = yPos[0];
             }
-
-            if (button==GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE){
-                mouseButton1 = false;
-                DoubleBuffer xBuffer = BufferUtils.createDoubleBuffer(1);
-                DoubleBuffer yBuffer = BufferUtils.createDoubleBuffer(1);
-                glfwGetCursorPos(window, xBuffer, yBuffer);
-                double x = xBuffer.get(0);
-                double y = yBuffer.get(0);
-                camera = camera.addAzimuth((double) Math.PI * (ox - x) / Main.getWidth())
-                        .addZenith((double) Math.PI * (oy - y) / Main.getWidth());
-                ox = x;
-                oy = y;
-            }
-            //Right Mouse
-            if (button==GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS){
-                mouseButton2 = true;
-                DoubleBuffer xBuffer = BufferUtils.createDoubleBuffer(1);
-                DoubleBuffer yBuffer = BufferUtils.createDoubleBuffer(1);
-                glfwGetCursorPos(window, xBuffer, yBuffer);
-                ox = xBuffer.get(0);
-                oy = yBuffer.get(0);
-            }
-            if (button==GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE){
-                mouseButton2 = false;
-                DoubleBuffer xBuffer = BufferUtils.createDoubleBuffer(1);
-                DoubleBuffer yBuffer = BufferUtils.createDoubleBuffer(1);
-                glfwGetCursorPos(window, xBuffer, yBuffer);
-                double x = xBuffer.get(0);
-                double y = yBuffer.get(0);
-                camera = camera.addAzimuth((double) Math.PI * (ox - x) / Main.getWidth())
-                        .addZenith((double) Math.PI * (oy - y) / Main.getWidth());
-                ox = x;
-                oy = y;
-            }
-            //Midle Mouse
-            if (button==GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS){
-                mouseButton3 = true;
-                DoubleBuffer xBuffer = BufferUtils.createDoubleBuffer(1);
-                DoubleBuffer yBuffer = BufferUtils.createDoubleBuffer(1);
-                glfwGetCursorPos(window, xBuffer, yBuffer);
-                ox = xBuffer.get(0);
-                oy = yBuffer.get(0);
-            }
-            if (button==GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE){
-                mouseButton3 = false;
-                DoubleBuffer xBuffer = BufferUtils.createDoubleBuffer(1);
-                DoubleBuffer yBuffer = BufferUtils.createDoubleBuffer(1);
-                glfwGetCursorPos(window, xBuffer, yBuffer);
-                double x = xBuffer.get(0);
-                double y = yBuffer.get(0);
-                camera = camera.addAzimuth((double) Math.PI * (ox - x) / Main.getWidth())
-                        .addZenith((double) Math.PI * (oy - y) / Main.getWidth());
-                ox = x;
-                oy = y;
-            }
+            if (button == GLFW_MOUSE_BUTTON_LEFT) leftMouse = (action == GLFW_PRESS);
+            else if (button == GLFW_MOUSE_BUTTON_RIGHT) rightMouse = (action == GLFW_PRESS);
+            else if (button == GLFW_MOUSE_BUTTON_MIDDLE) middleMouse = (action == GLFW_PRESS);
         }
     };
 
@@ -391,7 +324,7 @@ public class Renderer extends AbstractRenderer {
                     }
                     //Osvětlovací model
                     case GLFW_KEY_L -> {
-                        if (lightModeValue == 11 ) {
+                        if (lightModeValue == 12 ) {
                             lightModeValue = 0; System.out.println("L " + lightModeValue);}
                         else {
                             lightModeValue++; System.out.println("L " + lightModeValue);}
@@ -433,20 +366,9 @@ public class Renderer extends AbstractRenderer {
     }
 
     @Override
-    public GLFWMouseButtonCallback getMouseCallback() {
-        return mbCallback;
-    }
-
-    @Override
-    public GLFWCursorPosCallback getCursorCallback() {
-        return cpCallbacknew;
-    }
-
-    @Override
     public GLFWKeyCallback getKeyCallback() {
         return keyCallback;
     }
-
 
     private void setProjection(boolean ortho) {
         if(ortho) {
@@ -471,6 +393,17 @@ public class Renderer extends AbstractRenderer {
 
         if (mode == 2) { glPolygonMode(GL_FRONT_AND_BACK, GL_POINT); }
 
+    }
+
+
+    @Override
+    public GLFWCursorPosCallback getCursorCallback() {
+        return cursorPosCallback;
+    }
+
+    @Override
+    public GLFWMouseButtonCallback getMouseCallback() {
+        return mouseButtonCallback;
     }
 }
 

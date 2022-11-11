@@ -84,6 +84,8 @@ void main() {
 
     if (u_LightMode == 10) { outColor = vec4(vec3(1, 1, 1), 1.0f); }
 
-    if ( u_LightMode == 11) { outColor = vec4(gl_FragCoord.zzz, 1.0);}
+    if (u_LightMode == 11) { outColor = vec4(gl_FragCoord.zzz, 1.0);}
+
+    if (u_LightMode == 12) { outColor = (vec4(dist/2, dist/2, dist/2, 0.5) ) * baseColor; }
 
 }
