@@ -11,18 +11,19 @@ import java.nio.DoubleBuffer;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL20.glGetUniformLocation;
+import static org.lwjgl.opengl.GL20.glUniform1i;
 import static org.lwjgl.opengl.GL33.*;
 
 public class Renderer extends AbstractRenderer {
     private int shaderProgram, shaderPost;
     private Camera camera;
-    private OGLTexture2D textureBase; private OGLTexture2D textureNormal; private OGLRenderTarget renderTarget;
+    private OGLTexture2D textureBase, textureNormal , texHeight; private OGLRenderTarget renderTarget;
     private double ox, oy, camSpeed = 0.25;
     float timeChange = 0, secondObjPosX, secondObjPosY, spotCutOff;
-    int loc_uProj, loc_uView, loc_uSelectedModel, loc_lightMode, loc_uModel, loc_secondObj, loc_time, loc_EyePosition, loc_SpotCutOff, loc_ConstantAttenuation, loc_LinearAttenuation, loc_QuadraticAttenuation;
+    int loc_uProj, loc_uView, loc_uSelectedModel, loc_lightMode, loc_uModel, loc_secondObj, loc_time, loc_EyePosition, loc_SpotCutOff, loc_ConstantAttenuation, loc_LinearAttenuation, loc_QuadraticAttenuation, loc_mappingMode;
     private OGLBuffers buffers, buffersPost;
     private boolean gridModeList = true, leftMouse, rightMouse, middleMouse, mousePressed = false;
-    private int gridM = 20; private int gridN = 20; private int  gridMpost = 2; private int  gridNpost = 2, lightModeValue = 0, selectedModel = 0, secondObjModel = 0, polygonModeNumber = 0;
+    private int gridM = 20; private int gridN = 20; private int  gridMpost = 2; private int  gridNpost = 2, lightModeValue = 0, selectedModel = 0, secondObjModel = 0, polygonModeNumber = 0, mappingModeNumber = 0;
     Mat4 model, projection, rotation, translation, scale, secondObjMove;
     private Vec3D secondObjPos, eyePos;
 
@@ -67,6 +68,9 @@ public class Renderer extends AbstractRenderer {
         loc_SpotCutOff = glGetUniformLocation(shaderProgram, "u_spotCutOff");
         loc_secondObj = glGetUniformLocation(shaderProgram, "u_secondObj");
         loc_time = glGetUniformLocation(shaderProgram, "u_time");
+
+        //Mapping
+        loc_mappingMode = glGetUniformLocation(shaderProgram, "u_mappingMode");
 
         spotCutOff = 0.90f;
         eyePos = camera.getEye();
@@ -131,12 +135,13 @@ public class Renderer extends AbstractRenderer {
         glUniform1i(loc_lightMode, lightModeValue);
 
         textureBase.bind(shaderProgram, "textureBase", 0);
+        textureNormal.bind(shaderProgram, "textureNormal", 1);
+        textureNormal.bind(shaderProgram, "texHeight", 2);
+
+        //Mapping
+        glUniform1f(loc_mappingMode, mappingModeNumber);
 
         buffersMode(buffers, shaderProgram);
-
-        //Animace
-        //secondObjPosX = (float) (Math.sin(timeChange));
-        //secondObjPosY = (float) (Math.cos(timeChange));
 
         secondObjPosX = (float) (2 * Math.sin(-timeChange));
         secondObjPosY = (float) (2 * Math.cos(-timeChange));
@@ -278,7 +283,7 @@ public class Renderer extends AbstractRenderer {
                     }
                     //Osvětlovací model
                     case GLFW_KEY_L -> {
-                        if (lightModeValue == 12 ) { lightModeValue = 0; System.out.println("L " + lightModeValue); }
+                        if (lightModeValue == 13 ) { lightModeValue = 0; System.out.println("L " + lightModeValue); }
                         else { lightModeValue++; System.out.println("L " + lightModeValue); }
                     }
                     //Objekty
@@ -292,6 +297,8 @@ public class Renderer extends AbstractRenderer {
                     case GLFW_KEY_V -> { if (spotCutOff > 0.9) { spotCutOff -= 0.02; } }
                     //Polygon mode - Fill, Line, Point
                     case GLFW_KEY_C -> { polygonModeNumber++; if (polygonModeNumber == 3) { polygonModeNumber = 0;} }
+                    //Mapping
+                    case GLFW_KEY_K -> { mappingModeNumber++; System.out.println(mappingModeNumber); if (mappingModeNumber == 2) { mappingModeNumber = 0;} ;}
                 }
             }
         }

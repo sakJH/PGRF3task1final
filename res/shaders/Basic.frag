@@ -20,6 +20,9 @@ uniform float constantAttenuation, linearAttenuation, quadraticAttenuation;
 uniform vec3 u_secondObj;
 //Osvětlení reflektorem
 uniform float u_spotCutOff;
+//Mapping
+uniform int u_mappingMode;
+uniform sampler2D texHeight;
 
 void main() {
     vec4 ambientColor = vec4(0.3, 0.3, 0.3, 1);
@@ -41,7 +44,6 @@ void main() {
     vec4 ambient = ambientColor.rgba;
     vec4 diffuse = NDotL * diffuseColor.rgba * baseColor;
     vec4 specular = NDotH * specularColor.rgba;
-    //float specularPower = 3; vec4 specular = specularColor * ( pow(NDotH, specularPower * 4) );
 
     vec3 reflection = normalize(((2.0 * nd) * NDotL) - ld);
 
@@ -60,24 +62,6 @@ void main() {
     float spotEffect = max(dot(normalize(spotCutOffDir), normalize(-ld)), 0);
 
     float blend = clamp((spotEffect - u_spotCutOff) / (1 - u_spotCutOff), 0., 1.);
-
-
-    //Normal Mapping
-    //Získání normály povrchu z textury, transformace (r,g,b) na (nx,ny,nz)
-//    vec4 color_base = texture(baseColor, texCoords);
-//    vec3 bump = texture(textureNormal, texCoords.xy).rgb * 2.0 - 1.0;
-    //Výpočet osvětlení na základě získané normály v tečném prostoru
-//    float NdotL = max(dot(bump,toLightVec), 0.0);
-//    diffuse = NdotL * diffuseColor;
-
-//    float NdotHV = max( 0.0, dot( bump, normalize( toLightVec + eyeVec) ) );
-//    specular = specularColor * pow(NdotHV,10.0);
-    //Obarvení pixelu
-//    gl_FragColor.xyz = color_base.xyz * (diffuse.rgb + ambient.rgb) + specular.rgb;
-
-//    bump = texture2D(textureNormal, textureBase.xy).rgb * 2 - 1;
-    //----New
-
 
     //Módy osvětlení
     if (u_LightMode == 0) { outColor = (ambient + diffuse + specular) * baseColor; }
@@ -100,10 +84,31 @@ void main() {
 
     if (u_LightMode == 9) { outColor = mix(ambient, ambient + att * (diffuse + specular), blend) ; }
 
-    if (u_LightMode == 10) { outColor = vec4(vec3(1, 1, 1), 1.0f); } //Sphrere light
+    if(u_LightMode == 10) { outColor = vec4(vec3(1, 1, 1), 1.0f); } //Sphere light
 
-    if (u_LightMode == 11) { outColor = vec4(gl_FragCoord.zzz, 1.0);}
+    if(u_LightMode == 11) { outColor = vec4(gl_FragCoord.zzz, 1.0);}
 
-    if (u_LightMode == 12) { outColor = (vec4(dist/2, dist/2, dist/2, 0.5) ) * baseColor; }
+    if(u_LightMode == 12) { outColor = (vec4(dist/2, dist/2, dist/2, 0.5) ) * baseColor; }
+
+    //Mapping
+    vec2 texureCoord = texCoords;
+    if ( u_LightMode == 13) {
+
+        vec3 normalNorm = normal;
+        if (u_mappingMode == 1){ //Paralax - pokus
+
+            float height = texture2D(texHeight, texCoords).r - 0.5;
+            float v = height * 0.01 - 0.005;
+            texureCoord = texCoords + (eyeVec.xy * v).yx;
+        }
+        if (u_mappingMode == 0){
+            // Normal
+            normalNorm = texture2D(textureNormal, texureCoord).xyz * 2 - 1;
+        }
+        else { outColor = vec4(1,0,0,1); }
+
+        baseColor = texture2D(textureNormal, texureCoord);
+        outColor = baseColor * (ambient + diffuse + specular);
+    }
 
 }

@@ -9,6 +9,7 @@ uniform float u_spotCutOff;
 uniform int u_SelectedModel;
 uniform vec3 u_secondObj;
 uniform float u_time;
+uniform int u_mappingMode;
 
 out vec3 objectPos;
 out vec3 normalDir;
@@ -20,6 +21,7 @@ out vec4 objectPosition;
 out float dist;
 out vec3 secondObjDir;
 out float secondObjDis;
+out mat3 tbn;
 
 vec3 lightSoure = vec3(0.5, 0.5, 0.1);
 
@@ -155,6 +157,40 @@ vec3 getTangent() {
     // TODO: implementovat
     return vec3(0);
 }
+vec3 posObj(vec2 inPos){
+    vec3 pos;
+
+    if (u_SelectedModel == 0) { pos = vec3(inPos,0); }
+
+    if (u_SelectedModel == 1) { pos = getRing(inPos); }
+
+    if (u_SelectedModel == 2) { pos = getElephantHand(inPos); }
+
+    if (u_SelectedModel == 3) { pos = getSombrero(inPos); }
+
+    if (u_SelectedModel == 4) { pos = getCylinder(inPos); }
+
+    if (u_SelectedModel == 5) { pos = getSphere(inPos); }
+
+    if (u_SelectedModel == 7) { pos = getUnknown(inPos); }
+
+    if (u_SelectedModel == 7) { pos = getSecondSphere(inPos); }
+
+    return pos;
+}
+
+mat3 tangentMat(vec2 inPos){
+    float delta = 0.001;
+    vec3 tx = posObj(inPos + vec2(delta,0)) - posObj(inPos - vec2(delta,0));
+    vec3 ty = posObj(inPos + vec2(0,delta)) - posObj(inPos - vec2(0,delta));
+    tx= normalize(tx);
+    ty = normalize(ty);
+    vec3 tz = cross(tx,ty);
+    ty = cross(tz,tx);
+    return mat3(tx,ty,tz);
+}
+
+
 
 void main() {
     texCoords = inPosition;
@@ -219,6 +255,10 @@ void main() {
     vTangent = cross(vBinormal, vNormal);
 
     mat3 TBN = mat3(vTangent, vBinormal, vNormal);
+
+    //Paralax
+    if(u_mappingMode == 1) { tbn = tangentMat(inPosition); }
+    //------Normal Mapping
 
 
     objectPos = finalPos;
