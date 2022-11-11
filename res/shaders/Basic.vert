@@ -194,10 +194,17 @@ void main() {
         finalPos = getUnknown(position);
     }
     else if (u_SelectedModel == 7){
-        //Second OBj
+        //Second Obj - Sphere
         normal = getNormal(position);
         finalPos = getSecondSphere(position);
     }
+
+
+// Osvětlovací model
+    vec4 lightPosition = u_View * vec4(lightSoure, 1.);
+    toLightVec = lightPosition.xyz - objectPosition.xyz;
+    normalVec = transpose(inverse(mat3(u_View))) * normal;
+
 
     //Normal Mapping
     vec3 vNormal, vTangent, vBinormal, tangent;
@@ -213,13 +220,6 @@ void main() {
 
     mat3 TBN = mat3(vTangent, vBinormal, vNormal);
 
-
-    // Osvětlovací model
-    vec4 lightPosition = u_View * vec4(lightSoure, 1.);
-    toLightVec = lightPosition.xyz - objectPosition.xyz;
-    normalVec = transpose(inverse(mat3(u_View))) * normal;
-
-    vec2 a = vec2(float (2));
 
     objectPos = finalPos;
     normalDir = inverse(transpose(mat3(u_Model))) * normal;
