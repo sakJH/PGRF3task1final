@@ -23,7 +23,7 @@ public class Renderer extends AbstractRenderer {
     double camSpeed = 0.25;
     float timeChange = 0;
     private Main main;
-    int loc_uProj, loc_uView, loc_uSelectedModel, loc_lightMode, loc_uModel, loc_secondObj, loc_time, loc_EyePosition, loc_SpotCutOff;
+    int loc_uProj, loc_uView, loc_uSelectedModel, loc_lightMode, loc_uModel, loc_secondObj, loc_time, loc_EyePosition, loc_SpotCutOff, loc_ConstantAttenuation, loc_LinearAttenuation, loc_QuadraticAttenuation;
     private OGLBuffers buffers, buffersPost;
     private boolean gridModeList = true;
     private int gridM = 20; private int gridN = 20; private int  gridMpost = 2; private int  gridNpost = 2, lightModeValue = 0, selectedModel = 0;
@@ -78,16 +78,18 @@ public class Renderer extends AbstractRenderer {
         loc_uSelectedModel = glGetUniformLocation(shaderProgram, "u_SelectedModel");  // type -> selectedModel
         loc_EyePosition = glGetUniformLocation(shaderProgram, "u_EyePos");
 
+        //Utlum
+        loc_ConstantAttenuation = glGetUniformLocation(shaderProgram, "constantAttenuation");
+        loc_LinearAttenuation = glGetUniformLocation(shaderProgram, "linearAttenuation");
+        loc_QuadraticAttenuation = glGetUniformLocation(shaderProgram, "quadraticAttenuation");
+
         //Second Obj
-        loc_SpotCutOff = glGetUniformLocation(shaderProgram, "spotCutOff");
+        loc_SpotCutOff = glGetUniformLocation(shaderProgram, "u_spotCutOff");
         loc_secondObj = glGetUniformLocation(shaderProgram, "u_secondObj");
         loc_time = glGetUniformLocation(shaderProgram, "u_time");
-        loc_secondObj = glGetUniformLocation(shaderProgram, "u_secondObj");
-
 
         spotCutOff = 0.90f;
         eyePos = camera.getEye();
-
 
         //renderTarget = new OGLRenderTarget(800, 600);
 
@@ -136,6 +138,11 @@ public class Renderer extends AbstractRenderer {
         glUniform3fv(loc_EyePosition, ToFloatArray.convert(eyePos));
 
         glUniform1f(loc_SpotCutOff, spotCutOff);
+
+        //Utlum
+        glUniform1f(loc_ConstantAttenuation, 0);
+        glUniform1f(loc_LinearAttenuation, 0);
+        glUniform1f(loc_QuadraticAttenuation, 0.02f);
 
         //Model
         glUniformMatrix4fv(loc_uModel, false, ToFloatArray.convert(model));
@@ -384,7 +391,7 @@ public class Renderer extends AbstractRenderer {
                     }
                     //Osvětlovací model
                     case GLFW_KEY_L -> {
-                        if (lightModeValue == 10 ) {
+                        if (lightModeValue == 11 ) {
                             lightModeValue = 0; System.out.println("L " + lightModeValue);}
                         else {
                             lightModeValue++; System.out.println("L " + lightModeValue);}

@@ -4,8 +4,8 @@ in vec2 inPosition;
 uniform mat4 u_View;
 uniform mat4 u_Proj;
 uniform mat4 u_Model;
-uniform vec3 eyePos;
-uniform  float spotCutOff;
+uniform vec3 u_EyePos;
+uniform float u_spotCutOff;
 uniform int u_SelectedModel;
 uniform vec3 u_secondObj;
 uniform float u_time;
@@ -230,7 +230,7 @@ void main() {
 
     //secondObj
     secondObjDir = normalize(u_secondObj - finalPos4.xyz);
-    eyeVec = normalize(eyePos - finalPos4.xyz);
+    eyeVec = normalize(u_EyePos - finalPos4.xyz);
     secondObjDis = length(u_secondObj - finalPos4.xyz);
 
     vec4 pos4 = vec4(finalPos, 1.0);

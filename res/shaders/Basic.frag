@@ -12,8 +12,6 @@ in float secondObjDis;
 
 out vec4 outColor;
 
-uniform float u_ColorR;
-
 uniform sampler2D textureBase;
 uniform sampler2D textureNormal;
 
@@ -21,7 +19,7 @@ uniform int u_LightMode;
 uniform float constantAttenuation, linearAttenuation, quadraticAttenuation;
 uniform vec3 u_secondObj;
 //Osvětlení reflektorem
-uniform float spotCutOff;
+uniform float u_spotCutOff;
 
 void main() {
     vec4 ambientColor = vec4(0.3, 0.3, 0.3, 1);
@@ -61,7 +59,7 @@ void main() {
     //Osvětlení reflektorem
     float spotEffect = max(dot(normalize(spotCutOffDir), normalize(-ld)), 0);
 
-    float blend = clamp((spotEffect - spotCutOff) / (1 - spotCutOff), 0., 1.);
+    float blend = clamp((spotEffect - u_spotCutOff) / (1 - u_spotCutOff), 0., 1.);
 
     //Módy osvětlení
     if (u_LightMode == 0) { outColor = (ambient + diffuse + specular) * baseColor; }
@@ -80,10 +78,12 @@ void main() {
 
     if (u_LightMode == 7) { outColor =  (ambient + blend) * baseColor;}
 
-    if (u_LightMode == 8) { if(spotEffect > spotCutOff) { outColor = mix(ambient , ambient + att * (diffuse + specular), blend); }  else { outColor = ambient; } }
+    if (u_LightMode == 8) { if(spotEffect > u_spotCutOff) { outColor = mix(ambient , ambient + att * (diffuse + specular), blend); }  else { outColor = ambient; } }
 
     if (u_LightMode == 9) { outColor = mix(ambient, ambient + att * (diffuse + specular), blend) ; }
 
     if (u_LightMode == 10) outColor = vec4(vec3(1, 1, 1), 1.0f);
+
+    if ( u_LightMode == 11) { outColor = vec4(gl_FragCoord.zzz, 1.0);}
 
 }
