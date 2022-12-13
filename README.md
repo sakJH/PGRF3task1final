@@ -19,3 +19,4 @@ pokud v projektu něco svítí "červeně" je potřeba restartovat IDEU, aby se 
 
 ## Výsledek
 -  18,5 / 30
+### Myšlenka dobrá, ale je potřeba projekt dopracovat
