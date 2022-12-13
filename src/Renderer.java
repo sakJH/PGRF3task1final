@@ -52,7 +52,6 @@ public class Renderer extends AbstractRenderer {
 
 
         // Proj
-        loc_uProj = glGetUniformLocation(shaderProgram, "u_Proj");
         loc_uModel = glGetUniformLocation(shaderProgram, "u_Model");
         loc_uView = glGetUniformLocation(shaderProgram, "u_View");
         loc_lightMode = glGetUniformLocation(shaderProgram, "u_LightMode");  //colorType -> u_LightMode
